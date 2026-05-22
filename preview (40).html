@@ -1,0 +1,2681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ONEPWS Site Management System</title>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#1f2937}
+    .login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1f4e79,#2563eb);padding:20px}
+    .login-box{width:100%;max-width:420px;background:white;padding:26px;border-radius:14px;box-shadow:0 15px 35px rgba(0,0,0,.25)}
+    h2,h3{color:#1f4e79;margin-top:0}.login-box h2{text-align:center}.note{font-size:12px;color:#6b7280;line-height:1.5}.error{display:none;color:#b91c1c;font-weight:bold;margin-top:10px;text-align:center}
+    label{display:block;font-weight:bold;font-size:13px;margin:10px 0 5px}input,select,textarea{width:100%;padding:9px;border:1px solid #cfd8e3;border-radius:8px;font-family:Arial,sans-serif;font-size:14px}textarea{min-height:55px;resize:vertical}
+    button{border:0;border-radius:8px;padding:10px 14px;font-weight:bold;cursor:pointer}.btn-primary{background:#1f4e79;color:white}.btn-success{background:#15803d;color:white}.btn-danger{background:#b91c1c;color:white}.btn-warning{background:#b45309;color:white}.btn-light{background:#e5e7eb;color:#111827}
+    .container{display:none;max-width:1400px;margin:auto;padding:16px}.header,.card{background:white;border-radius:12px;padding:16px;margin-bottom:15px;box-shadow:0 3px 10px rgba(0,0,0,.07)}
+    .header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.header h1{margin:0;color:#1f4e79;font-size:23px}.header p{margin:5px 0 0;color:#6b7280}
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.hide{display:none!important}.table-wrap{overflow-x:auto}
+    table{width:100%;border-collapse:collapse;background:white}th,td{border:1px solid #cfd8e3;padding:8px;font-size:13px;vertical-align:top}th{background:#1f4e79;color:white;text-align:left;white-space:nowrap}.sr{text-align:center;font-weight:bold}
+    .summary{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}.box{border:1px solid #cfd8e3;border-radius:10px;background:#f9fafb;padding:12px;text-align:center}.box strong{display:block;font-size:22px;color:#1f4e79}.badge{padding:4px 8px;border-radius:20px;font-size:12px;font-weight:bold;display:inline-block}.file-list{font-size:12px;line-height:1.6}.file-item{display:block;margin:2px 0}.file-item a{color:#1f4e79;font-weight:bold;text-decoration:none}.preview-img{max-width:90px;max-height:70px;border:1px solid #cfd8e3;border-radius:6px;margin:3px}.on{background:#dcfce7;color:#166534}.minor{background:#fef3c7;color:#92400e}.critical{background:#fee2e2;color:#991b1b}.hold{background:#e5e7eb;color:#374151}
+
+    .site-card-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+
+    .admin-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 15px 0;background:white;border-radius:12px;padding:10px;box-shadow:0 3px 10px rgba(0,0,0,.07)}
+    .admin-tab-btn{width:auto;background:#e5e7eb;color:#111827;border-radius:10px;padding:11px 16px}
+    .admin-tab-btn.active{background:#1f4e79;color:white}
+    .admin-slide{display:none}
+    .admin-slide.active{display:block}
+
+    .upgrade-alert{border-left:5px solid #b91c1c;background:#fff7f7;padding:12px;border-radius:10px;margin:10px 0}
+    .upgrade-ok{border-left:5px solid #15803d;background:#f0fdf4;padding:12px;border-radius:10px;margin:10px 0}
+    .quick-actions{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+    .quick-actions button{width:auto}
+
+
+    .compliance-status-done{background:#dcfce7;color:#166534;font-weight:bold;border-radius:20px;padding:4px 8px;display:inline-block}
+    .compliance-status-pending{background:#fee2e2;color:#991b1b;font-weight:bold;border-radius:20px;padding:4px 8px;display:inline-block}
+
+
+    .site-summary-table th{background:#1f4e79;color:#fff}
+    .site-summary-table td,.site-summary-table th{white-space:nowrap}
+
+    .slide-title{border-left:5px solid #1f4e79;padding-left:10px}
+
+    @media(max-width:900px){.site-card-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:600px){.site-card-grid{grid-template-columns:1fr}}
+
+    @media(max-width:900px){.grid,.summary{grid-template-columns:repeat(2,1fr)}}@media(max-width:600px){.grid,.summary{grid-template-columns:1fr}.header h1{font-size:19px}}
+    @media print{.no-print,.login-screen{display:none!important}.container{display:block!important;max-width:100%;padding:0}.card,.header{box-shadow:none;border:1px solid #ccc}th{background:#ddd!important;color:#000!important}input,select,textarea{border:0;padding:0}}
+  </style>
+</head>
+<body>
+
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <h2>ONEPWS Site Management System</h2>
+    <p style="text-align:center;color:#6b7280">Stable Offline Version</p>
+    <label>Login ID</label>
+    <input id="loginId" placeholder="Example: jindal.paradip">
+    <label>Password</label>
+    <input type="password" id="passwordInput" placeholder="Enter password" onkeydown="if(event.key==='Enter'){login()}">
+    <button class="btn-primary" style="width:100%;margin-top:14px" onclick="login()">Login</button>
+    <div class="error" id="loginError">Wrong Login ID or Password</div>
+    <p class="note" style="margin-top:14px">Enter your authorized Login ID and Password.</p>
+  </div>
+</div>
+
+<div class="container" id="mainApp">
+  <div class="header">
+    <div>
+      <h1>ONEPWS Site Management System</h1>
+      <p id="modeText">Offline site-wise login system</p>
+    </div>
+    <div class="actions no-print">
+      <button class="btn-light" onclick="logout()">Logout</button>
+      <button class="btn-primary" onclick="window.print()">Print / Save PDF</button>
+    </div>
+  </div>
+
+  <div class="card" style="border-left:5px solid #15803d">
+    <b>Note:</b> This is an offline file. It will run by double-click. Data will save only in this same browser/computer.
+  </div>
+
+  <section id="engineerPanel">
+    <div class="card">
+      <h3>Daily Progress Entry</h3>
+      <div class="grid">
+        <div><label>Project / Site Name</label><input id="projectName" readonly></div>
+        <div><label>Site Login ID</label><input id="siteLoginDisplay" readonly></div>
+        <div><label>Client Name</label><input id="clientName" placeholder="Client name"></div>
+        <div><label>Update Date</label><input type="date" id="updateDate"></div>
+        <div><label>Site Engineer</label><input id="engineerName" placeholder="Engineer name"></div>
+        <div><label>Contact No.</label><input id="contactNo" placeholder="Mobile no."></div>
+        <div><label>Overall Status</label><select id="overallStatus"><option>On Track</option><option>Minor Delay</option><option>Critical Delay</option><option>Work Hold</option></select></div>
+        <div><label>Overall Progress %</label><input type="number" id="overallProgress" min="0" max="100" placeholder="Auto calculated" readonly></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Activity Progress</h3>
+      <div class="table-wrap">
+        <table id="activityTable">
+          <thead><tr><th>Sr.</th><th>Activity / Scope</th><th>Area</th><th>Planned Qty</th><th>Completed Today</th><th>Total Completed</th><th>Balance</th><th>Overall Progress %</th><th>Status</th><th>Manpower</th><th>Remarks / Dependency</th><th class="no-print">Action</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="actions no-print"><button class="btn-primary" onclick="addActivityRow()">Add Activity</button></div>
+    </div>
+
+    <div class="card">
+      <h3>Manpower Status</h3>
+      <div class="grid">
+        <div><label>Supervisor</label><input type="number" id="supervisor" value="0" oninput="calculateAll()"></div>
+        <div><label>Skilled Labour</label><input type="number" id="skilled" value="0" oninput="calculateAll()"></div>
+        <div><label>Helper</label><input type="number" id="helper" value="0" oninput="calculateAll()"></div>
+        <div><label>Total Manpower</label><input type="number" id="totalManpower" readonly></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Material / Drawing / Front Dependency</h3>
+      <div class="table-wrap">
+        <table id="dependencyTable">
+          <thead><tr><th>Sr.</th><th>Type</th><th>Description</th><th>Required Date</th><th>Responsible</th><th>Status</th><th>Impact</th><th class="no-print">Action</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="actions no-print"><button class="btn-primary" onclick="addDependencyRow()">Add Dependency</button></div>
+    </div>
+
+    <div class="card">
+      <h3>Photo / Document Upload</h3>
+      <input type="file" id="photoFiles" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(event)">
+      <p class="note" style="margin-top:14px">Enter your authorized Login ID and Password.</p>
+      <div id="uploadedFileList" class="file-list"></div>
+    </div>
+    <div class="card"><h3>Engineer Remarks</h3><textarea id="engineerRemarks" placeholder="Mention critical issues, site support required, safety points, etc."></textarea><div class="actions no-print"><button class="btn-success" onclick="submitProgress()">Submit Daily Progress</button><button class="btn-light" onclick="resetForm()">New Entry</button></div></div>
+  </section>
+
+  <section id="adminPanel" class="hide">
+    <div class="admin-tabs no-print">
+      <button class="admin-tab-btn active" onclick="showAdminSlide('slideDashboard', this)">📊 Dashboard</button>
+      <button class="admin-tab-btn" onclick="showAdminSlide('slideTeamStatus', this)">👷 Site Team Status</button>
+      <button class="admin-tab-btn" onclick="showAdminSlide('slideDWR', this)">📝 DWR</button>
+      <button class="admin-tab-btn" onclick="showAdminSlide('slideCompliance', this)">📋 Labour Compliance</button>
+      <button class="admin-tab-btn" onclick="showAdminSlide('slideSiteManagement', this)">⚙️ Site Management</button>
+    </div>
+
+    <div id="slideDashboard" class="admin-slide active">
+      <h3 class="slide-title">Admin Dashboard</h3>
+
+      <div class="card no-print">
+        <h3>System Upgrade Controls</h3>
+        <div class="quick-actions">
+          <button class="btn-primary" onclick="printCurrentSlide()">Print Current Slide / Save PDF</button>
+          <button class="btn-warning" onclick="exportFullAdminBackup()">Download Full Backup</button>
+          <button class="btn-light" onclick="document.getElementById('adminBackupInput').click()">Restore Backup</button>
+          <input type="file" id="adminBackupInput" accept=".json" style="display:none" onchange="restoreFullAdminBackup(event)">
+          <button class="btn-success" onclick="generateComplianceAlertReport()">Generate Pending Compliance Alert</button>
+        </div>
+        <div id="upgradeAlertBox" class="upgrade-ok">System ready. Use backup regularly before clearing browser data.</div>
+      </div>
+
+      <div class="card">
+      <h3>Master Dashboard Summary</h3>
+      <div class="summary">
+        <div class="box"><strong id="totalSites">0</strong>Total Updates</div>
+        <div class="box"><strong id="onTrackSites">0</strong>On Track</div>
+        <div class="box"><strong id="minorDelaySites">0</strong>Minor Delay</div>
+        <div class="box"><strong id="criticalSites">0</strong>Critical/Hold</div>
+        <div class="box"><strong id="avgProgress">0%</strong>Avg Progress</div>
+      </div>
+      <h3 style="margin-top:18px">Site-wise Summary</h3>
+      <div class="table-wrap">
+        <table class="site-summary-table" id="siteSummaryTable">
+          <thead>
+            <tr>
+              <th>Site Name</th>
+              <th>Total Updates</th>
+              <th>Latest Date</th>
+              <th>Latest Status</th>
+              <th>Latest Progress %</th>
+              <th>Avg Progress %</th>
+              <th>Total Manpower</th>
+              <th>Open Dependencies</th>
+              <th>Engineer</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="actions no-print"><button class="btn-primary" onclick="loadMasterData()">Refresh</button><button class="btn-warning" onclick="exportMasterCSV()">Export CSV</button><button class="btn-success" onclick="exportSiteSummaryCSV()">Export Site Summary CSV</button><button class="btn-danger" onclick="clearOfflineData()">Clear Offline Data</button></div>
+    </div>
+
+    <div class="card">
+      <h3>All Site Updates</h3>
+      <div class="table-wrap">
+        <table id="masterTable">
+          <thead><tr><th>Date/Time</th><th>Site Login</th><th>Site</th><th>Client</th><th>Engineer</th><th>Contact</th><th>Status</th><th>Progress %</th><th>Total MP</th><th>Supervisor</th><th>Skilled</th><th>Helper</th><th>Completed Today</th><th>Balance</th><th>Total Dependencies</th><th>Open Dependencies</th><th>Dependency Details</th><th>Activity Details</th><th>Remarks</th><th>Uploaded Files</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  
+    </div>
+
+    <div id="slideTeamStatus" class="admin-slide">
+      <h3 class="slide-title">Site Team Status</h3>
+      <div class="card">
+      <h3>Site Team Status / Attendance / Idle Alert Tracker</h3>
+      <p class="note">
+        This section is merged from your Site Team Status program. It works offline and saves data in the same browser.
+      </p>
+      <div class="no-print" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+        <button class="btn-primary" onclick="openTeamTrackerFullScreen()">Open Team Tracker Full Screen</button>
+      </div>
+      <iframe id="teamTrackerFrame" title="Site Team Status Tracker"
+        style="width:100%;height:900px;border:1px solid #cfd8e3;border-radius:12px;background:#fff;"
+        srcdoc="&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;UTF-8&quot;&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+&lt;title&gt;Site Engineer Attendance Tracker&lt;/title&gt;
+&lt;style&gt;
+  :root {
+    --bg:#f4f7fb; --card:#fff; --line:#d9e2ef; --text:#1f2937; --muted:#6b7280;
+    --primary:#0f4c81; --primary2:#1d6fb8; --ok:#15803d; --warn:#b45309; --danger:#b91c1c; --soft:#eef5fb;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+  .wrap{max-width:1500px;margin:0 auto;padding:20px}
+  .hero{background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;padding:20px 24px;border-radius:18px;margin-bottom:18px}
+  .hero h1{margin:0 0 6px;font-size:28px}
+  .hero p{margin:0;opacity:.95;line-height:1.5}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 6px 16px rgba(15,23,42,.04)}
+  .card h2{margin:0 0 6px;font-size:20px}
+  .sub{color:var(--muted);font-size:14px;margin-bottom:14px}
+  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+  .span-12{grid-column:span 12}
+  .span-6{grid-column:span 6}
+  .form-grid{display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:12px}
+  label{display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:6px}
+  input,select,textarea,button{width:100%;padding:11px 12px;border-radius:10px;border:1px solid #cfd9e6;font-size:14px;font-family:inherit}
+  textarea{min-height:84px;resize:vertical}
+  button{border:none;background:var(--primary);color:#fff;font-weight:700;cursor:pointer}
+  button.secondary{background:#eef5fb;color:var(--primary);border:1px solid #cfe0f0}
+  button.warn{background:var(--warn)}
+  button.danger{background:var(--danger)}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+  .actions button{width:auto;min-width:170px}
+  .kpis{display:grid;grid-template-columns:repeat(5,minmax(150px,1fr));gap:14px}
+  .kpi{background:#f8fbff;border:1px solid #d9e8f6;border-radius:14px;padding:14px}
+  .kpi .label{font-size:13px;color:var(--muted);margin-bottom:6px}
+  .kpi .value{font-size:28px;font-weight:700;color:var(--primary)}
+  .toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+  .toolbar .filters{display:flex;gap:10px;flex-wrap:wrap;flex:1}
+  .toolbar .filters&gt;*{min-width:180px;flex:1}
+  .table-wrap{max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:12px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:10px 8px;border-bottom:1px solid #e5ebf4;text-align:left;vertical-align:top}
+  th{background:#f6f9fd;position:sticky;top:0;text-transform:uppercase;font-size:12px;letter-spacing:.03em}
+  .pill{display:inline-block;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:700}
+  .on-site{background:#dcfce7;color:#166534}
+  .on-leave{background:#fef3c7;color:#92400e}
+  .released{background:#fee2e2;color:#991b1b}
+  .transit{background:#dbeafe;color:#1d4ed8}
+  .available{background:#ede9fe;color:#6d28d9}
+  .idle-alert{background:#fff7ed;color:#9a3412}
+  .footer{text-align:center;color:var(--muted);font-size:12px;padding:8px 0 0}
+  .note{background:#f8fbff;border:1px dashed #cfe0f0;border-radius:12px;padding:12px 14px;color:#36526b;font-size:13px}
+  .days-critical{color:#b91c1c;font-weight:700}
+  .days-warning{color:#b45309;font-weight:700}
+  .days-normal{color:#166534;font-weight:700}
+  @media (max-width:1050px){.span-6{grid-column:span 12} .form-grid,.kpis{grid-template-columns:1fr 1fr}}
+  @media (max-width:700px){.wrap{padding:12px} .hero h1{font-size:24px} .form-grid,.kpis{grid-template-columns:1fr}}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div class=&quot;wrap&quot;&gt;
+  &lt;div class=&quot;hero&quot;&gt;
+    &lt;h1&gt;Site Engineer Attendance, Deployment, Release &amp; Idle Alert Tracker&lt;/h1&gt;
+    &lt;p&gt;Daily attendance entry system with engineer deployment, release, advance idle notification, live master register, and export options. Data saves automatically in browser local storage.&lt;/p&gt;
+  &lt;/div&gt;
+
+  &lt;div class=&quot;grid&quot;&gt;
+    &lt;div class=&quot;card span-12&quot;&gt;
+      &lt;h2&gt;Live Summary&lt;/h2&gt;
+      &lt;div class=&quot;sub&quot;&gt;Current live status based on the master list and your saved actions.&lt;/div&gt;
+      &lt;div class=&quot;kpis&quot;&gt;
+        &lt;div class=&quot;kpi&quot;&gt;&lt;div class=&quot;label&quot;&gt;Total Engineers&lt;/div&gt;&lt;div class=&quot;value&quot; id=&quot;kpiTotal&quot;&gt;0&lt;/div&gt;&lt;/div&gt;
+        &lt;div class=&quot;kpi&quot;&gt;&lt;div class=&quot;label&quot;&gt;On Site&lt;/div&gt;&lt;div class=&quot;value&quot; id=&quot;kpiOnSite&quot;&gt;0&lt;/div&gt;&lt;/div&gt;
+        &lt;div class=&quot;kpi&quot;&gt;&lt;div class=&quot;label&quot;&gt;On Leave / Transit&lt;/div&gt;&lt;div class=&quot;value&quot; id=&quot;kpiLeaveTransit&quot;&gt;0&lt;/div&gt;&lt;/div&gt;
+        &lt;div class=&quot;kpi&quot;&gt;&lt;div class=&quot;label&quot;&gt;Released&lt;/div&gt;&lt;div class=&quot;value&quot; id=&quot;kpiReleased&quot;&gt;0&lt;/div&gt;&lt;/div&gt;
+        &lt;div class=&quot;kpi&quot;&gt;&lt;div class=&quot;label&quot;&gt;Upcoming Idle&lt;/div&gt;&lt;div class=&quot;value&quot; id=&quot;kpiIdle&quot;&gt;0&lt;/div&gt;&lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;card span-12&quot;&gt;
+      &lt;h2&gt;Daily Attendance Entry&lt;/h2&gt;
+      &lt;div class=&quot;sub&quot;&gt;Mark attendance for site engineers on a daily basis.&lt;/div&gt;
+      &lt;div class=&quot;form-grid&quot;&gt;
+        &lt;div&gt;
+          &lt;label for=&quot;attDate&quot;&gt;Date&lt;/label&gt;
+          &lt;input type=&quot;date&quot; id=&quot;attDate&quot;&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+          &lt;label for=&quot;attEngineer&quot;&gt;Engineer Name&lt;/label&gt;
+          &lt;select id=&quot;attEngineer&quot;&gt;&lt;/select&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+          &lt;label for=&quot;attSite&quot;&gt;Site&lt;/label&gt;
+          &lt;select id=&quot;attSite&quot;&gt;&lt;/select&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+          &lt;label for=&quot;attStatus&quot;&gt;Attendance Status&lt;/label&gt;
+          &lt;select id=&quot;attStatus&quot;&gt;
+            &lt;option&gt;Present&lt;/option&gt;
+            &lt;option&gt;Absent&lt;/option&gt;
+            &lt;option&gt;On Leave&lt;/option&gt;
+            &lt;option&gt;Transit&lt;/option&gt;
+            &lt;option&gt;Released&lt;/option&gt;
+          &lt;/select&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div style=&quot;margin-top:12px&quot;&gt;
+        &lt;label for=&quot;attRemarks&quot;&gt;Remarks&lt;/label&gt;
+        &lt;textarea id=&quot;attRemarks&quot; placeholder=&quot;Any site comment, delay, leave reason, movement note, etc.&quot;&gt;&lt;/textarea&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;actions&quot;&gt;
+        &lt;button onclick=&quot;saveAttendance()&quot;&gt;Save Attendance&lt;/button&gt;
+        &lt;button class=&quot;secondary&quot; onclick=&quot;clearAttendanceForm()&quot;&gt;Clear&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;card span-6&quot;&gt;
+      &lt;h2&gt;Deploy Engineer&lt;/h2&gt;
+      &lt;div class=&quot;sub&quot;&gt;Move engineer from one site to another site.&lt;/div&gt;
+      &lt;div class=&quot;form-grid&quot; style=&quot;grid-template-columns:repeat(2,minmax(180px,1fr))&quot;&gt;
+        &lt;div&gt;
+          &lt;label for=&quot;depDate&quot;&gt;Deployment Date&lt;/label&gt;
+          &lt;input type=&quot;date&quot; id=&quot;depDate&quot;&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+          &lt;label for=&quot;depEngineer&quot;&gt;Engineer Name&lt;/label&gt;
+          &lt;select id=&quot;depEngineer&quot;&gt;&lt;/select&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+          &lt;label for=&quot;depFromSite&quot;&gt;From Site&lt;/label&gt;
+          &lt;input type=&quot;text&quot; id=&quot;depFromSite&quot; readonly&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+          &lt;label for=&quot;depToSite&quot;&gt;Deploy To Site&lt;/label&gt;
+          &lt;select id=&quot;depToSite&quot;&gt;&lt;/select&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div style=&quot;margin-top:12px&quot;&gt;
+        &lt;label for=&quot;depRemarks&quot;&gt;Remarks&lt;/label&gt;
+        &lt;textarea id=&quot;depRemarks&quot; placeholder=&quot;Reason for deployment / instruction / project reference&quot;&gt;&lt;/textarea&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;actions&quot;&gt;
+        &lt;button onclick=&quot;deployEngineer()&quot;&gt;Deploy Engineer&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;card span-6&quot;&gt;
+      &lt;h2&gt;Release Engineer&lt;/h2&gt;
+      &lt;div class=&quot;sub&quot;&gt;Release engineer from current site or move status to leave/transit/released.&lt;/div&gt;
+      &lt;div class=&quot;form-grid&quot; style=&quot;grid-template-columns:repeat(2,minmax(180px,1fr))&quot;&gt;
+        &lt;div&gt;
+          &lt;label for=&quot;relDate&quot;&gt;Release Date&lt;/label&gt;
+          &lt;input type=&quot;date&quot; id=&quot;relDate&quot;&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+          &lt;label for=&quot;relEngineer&quot;&gt;Engineer Name&lt;/label&gt;
+          &lt;select id=&quot;relEngineer&quot;&gt;&lt;/select&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+          &lt;label for=&quot;relSite&quot;&gt;Current Site&lt;/label&gt;
+          &lt;input type=&quot;text&quot; id=&quot;relSite&quot; readonly&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+          &lt;label for=&quot;relStatus&quot;&gt;Release Status&lt;/label&gt;
+          &lt;select id=&quot;relStatus&quot;&gt;
+            &lt;option&gt;Released&lt;/option&gt;
+            &lt;option&gt;On Leave&lt;/option&gt;
+            &lt;option&gt;Transit&lt;/option&gt;
+            &lt;option&gt;Available&lt;/option&gt;
+          &lt;/select&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div style=&quot;margin-top:12px&quot;&gt;
+        &lt;label for=&quot;relRemarks&quot;&gt;Remarks&lt;/label&gt;
+        &lt;textarea id=&quot;relRemarks&quot; placeholder=&quot;Reason for release / leave / demobilization note&quot;&gt;&lt;/textarea&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;actions&quot;&gt;
+        &lt;button class=&quot;warn&quot; onclick=&quot;releaseEngineer()&quot;&gt;Release Engineer&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;card span-12&quot;&gt;
+      &lt;h2&gt;Advance Idle Notification&lt;/h2&gt;
+      &lt;div class=&quot;sub&quot;&gt;Track engineers who will become idle soon, so deployment can be planned in advance.&lt;/div&gt;
+      &lt;div class=&quot;note&quot;&gt;Use this section when site work is nearing completion or dependency is expected. This will help reduce free man days and idle manpower.&lt;/div&gt;
+      &lt;div class=&quot;form-grid&quot; style=&quot;margin-top:12px&quot;&gt;
+        &lt;div&gt;
+          &lt;label for=&quot;idleEngineer&quot;&gt;Engineer Name&lt;/label&gt;
+          &lt;select id=&quot;idleEngineer&quot;&gt;&lt;/select&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+          &lt;label for=&quot;idleSite&quot;&gt;Current Site&lt;/label&gt;
+          &lt;input type=&quot;text&quot; id=&quot;idleSite&quot; readonly&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+          &lt;label for=&quot;idleDate&quot;&gt;Expected Idle Date&lt;/label&gt;
+          &lt;input type=&quot;date&quot; id=&quot;idleDate&quot;&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+          &lt;label for=&quot;idleReason&quot;&gt;Reason&lt;/label&gt;
+          &lt;select id=&quot;idleReason&quot;&gt;
+            &lt;option&gt;Work Completion&lt;/option&gt;
+            &lt;option&gt;Dependency&lt;/option&gt;
+            &lt;option&gt;Material Delay&lt;/option&gt;
+            &lt;option&gt;Client Delay&lt;/option&gt;
+            &lt;option&gt;Manpower Surplus&lt;/option&gt;
+            &lt;option&gt;Demobilization Planned&lt;/option&gt;
+          &lt;/select&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div style=&quot;margin-top:12px&quot;&gt;
+        &lt;label for=&quot;idleRemarks&quot;&gt;Remarks / Action Required&lt;/label&gt;
+        &lt;textarea id=&quot;idleRemarks&quot; placeholder=&quot;Mention likely release, next target site, approval pending, or any planning note&quot;&gt;&lt;/textarea&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;actions&quot;&gt;
+        &lt;button onclick=&quot;saveIdleAlert()&quot;&gt;Add Idle Alert&lt;/button&gt;
+        &lt;button class=&quot;secondary&quot; onclick=&quot;clearIdleForm()&quot;&gt;Clear&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;card span-12&quot;&gt;
+      &lt;div class=&quot;toolbar&quot;&gt;
+        &lt;div&gt;
+          &lt;h2 style=&quot;margin:0&quot;&gt;Upcoming Idle Engineers&lt;/h2&gt;
+          &lt;div class=&quot;sub&quot; style=&quot;margin:4px 0 0&quot;&gt;Shows engineers expected to become idle. Priority coloring is based on days left.&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;filters&quot;&gt;
+          &lt;input type=&quot;text&quot; id=&quot;searchIdle&quot; placeholder=&quot;Search engineer / site / reason&quot; oninput=&quot;renderIdleTable()&quot;&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;table-wrap&quot;&gt;
+        &lt;table&gt;
+          &lt;thead&gt;
+            &lt;tr&gt;
+              &lt;th&gt;Name&lt;/th&gt;
+              &lt;th&gt;Current Site&lt;/th&gt;
+              &lt;th&gt;Idle Date&lt;/th&gt;
+              &lt;th&gt;Days Left&lt;/th&gt;
+              &lt;th&gt;Reason&lt;/th&gt;
+              &lt;th&gt;Remarks&lt;/th&gt;
+              &lt;th&gt;Action&lt;/th&gt;
+            &lt;/tr&gt;
+          &lt;/thead&gt;
+          &lt;tbody id=&quot;idleTable&quot;&gt;&lt;/tbody&gt;
+        &lt;/table&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;card span-12&quot;&gt;
+      &lt;h2&gt;Master Setup&lt;/h2&gt;
+      &lt;div class=&quot;sub&quot;&gt;Use this section to manually add new engineer or new site in the dropdown list.&lt;/div&gt;
+      &lt;div class=&quot;form-grid&quot;&gt;
+        &lt;div&gt;
+          &lt;label for=&quot;newEngineerName&quot;&gt;New Engineer Name&lt;/label&gt;
+          &lt;input type=&quot;text&quot; id=&quot;newEngineerName&quot; placeholder=&quot;Enter engineer name&quot;&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+          &lt;label for=&quot;newEngineerDept&quot;&gt;Department&lt;/label&gt;
+          &lt;input type=&quot;text&quot; id=&quot;newEngineerDept&quot; placeholder=&quot;CCR / Safety / Other&quot;&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+          &lt;label for=&quot;newEngineerSite&quot;&gt;Current Site&lt;/label&gt;
+          &lt;select id=&quot;newEngineerSite&quot;&gt;&lt;/select&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+          &lt;label for=&quot;newEngineerStatus&quot;&gt;Current Status&lt;/label&gt;
+          &lt;select id=&quot;newEngineerStatus&quot;&gt;
+            &lt;option&gt;On site&lt;/option&gt;
+            &lt;option&gt;On Leave&lt;/option&gt;
+            &lt;option&gt;Transit&lt;/option&gt;
+            &lt;option&gt;Released&lt;/option&gt;
+            &lt;option&gt;Available&lt;/option&gt;
+          &lt;/select&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;actions&quot;&gt;
+        &lt;button onclick=&quot;addEngineer()&quot;&gt;Add Engineer&lt;/button&gt;
+      &lt;/div&gt;
+
+      &lt;div class=&quot;form-grid&quot; style=&quot;margin-top:14px;grid-template-columns:repeat(3,minmax(180px,1fr))&quot;&gt;
+        &lt;div&gt;
+          &lt;label for=&quot;newSiteName&quot;&gt;New Site Name&lt;/label&gt;
+          &lt;input type=&quot;text&quot; id=&quot;newSiteName&quot; placeholder=&quot;Enter site name&quot;&gt;
+        &lt;/div&gt;
+        &lt;div style=&quot;display:flex;align-items:end&quot;&gt;
+          &lt;button onclick=&quot;addSite()&quot;&gt;Add Site&lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;card span-12&quot;&gt;
+      &lt;div class=&quot;toolbar&quot;&gt;
+        &lt;div&gt;
+          &lt;h2 style=&quot;margin:0&quot;&gt;Engineer Master Status&lt;/h2&gt;
+          &lt;div class=&quot;sub&quot; style=&quot;margin:4px 0 0&quot;&gt;Live list of engineers, current site and status.&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;filters&quot;&gt;
+          &lt;input type=&quot;text&quot; id=&quot;searchEngineer&quot; placeholder=&quot;Search engineer / site / remarks&quot; oninput=&quot;renderMasterTable()&quot;&gt;
+          &lt;select id=&quot;filterStatus&quot; onchange=&quot;renderMasterTable()&quot;&gt;
+            &lt;option value=&quot;&quot;&gt;All Status&lt;/option&gt;
+            &lt;option value=&quot;on site&quot;&gt;On Site&lt;/option&gt;
+            &lt;option value=&quot;on leave&quot;&gt;On Leave&lt;/option&gt;
+            &lt;option value=&quot;transit&quot;&gt;Transit&lt;/option&gt;
+            &lt;option value=&quot;released&quot;&gt;Released&lt;/option&gt;
+            &lt;option value=&quot;available&quot;&gt;Available&lt;/option&gt;
+          &lt;/select&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;table-wrap&quot;&gt;
+        &lt;table&gt;
+          &lt;thead&gt;
+            &lt;tr&gt;
+              &lt;th&gt;Sr No.&lt;/th&gt;
+              &lt;th&gt;Name&lt;/th&gt;
+              &lt;th&gt;Department&lt;/th&gt;
+              &lt;th&gt;Current Site&lt;/th&gt;
+              &lt;th&gt;Status&lt;/th&gt;
+              &lt;th&gt;Remarks&lt;/th&gt;
+              &lt;th&gt;Mar&lt;/th&gt;
+              &lt;th&gt;Apr&lt;/th&gt;
+              &lt;th&gt;May&lt;/th&gt;
+              &lt;th&gt;Jun&lt;/th&gt;
+              &lt;th&gt;Jul&lt;/th&gt;
+            &lt;/tr&gt;
+          &lt;/thead&gt;
+          &lt;tbody id=&quot;masterTable&quot;&gt;&lt;/tbody&gt;
+        &lt;/table&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;card span-6&quot;&gt;
+      &lt;h2&gt;Attendance Register&lt;/h2&gt;
+      &lt;div class=&quot;actions&quot;&gt;
+        &lt;button onclick=&quot;exportAttendanceCSV()&quot;&gt;Export Attendance CSV&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;table-wrap&quot; style=&quot;margin-top:10px&quot;&gt;
+        &lt;table&gt;
+          &lt;thead&gt;
+            &lt;tr&gt;&lt;th&gt;Date&lt;/th&gt;&lt;th&gt;Name&lt;/th&gt;&lt;th&gt;Site&lt;/th&gt;&lt;th&gt;Status&lt;/th&gt;&lt;th&gt;Remarks&lt;/th&gt;&lt;/tr&gt;
+          &lt;/thead&gt;
+          &lt;tbody id=&quot;attendanceTable&quot;&gt;&lt;/tbody&gt;
+        &lt;/table&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;card span-6&quot;&gt;
+      &lt;h2&gt;Movement Register&lt;/h2&gt;
+      &lt;div class=&quot;actions&quot;&gt;
+        &lt;button class=&quot;secondary&quot; onclick=&quot;exportFullBackup()&quot;&gt;Full Backup&lt;/button&gt;
+        &lt;button class=&quot;secondary&quot; onclick=&quot;resetAllData()&quot;&gt;Reset Browser Data&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;table-wrap&quot; style=&quot;margin-top:10px&quot;&gt;
+        &lt;table&gt;
+          &lt;thead&gt;
+            &lt;tr&gt;&lt;th&gt;Date&lt;/th&gt;&lt;th&gt;Name&lt;/th&gt;&lt;th&gt;Action&lt;/th&gt;&lt;th&gt;From Site&lt;/th&gt;&lt;th&gt;To / Status&lt;/th&gt;&lt;th&gt;Remarks&lt;/th&gt;&lt;/tr&gt;
+          &lt;/thead&gt;
+          &lt;tbody id=&quot;movementTable&quot;&gt;&lt;/tbody&gt;
+        &lt;/table&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;div class=&quot;footer&quot;&gt;Prepared from your uploaded tracker and upgraded with advance idle notification.&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+const initialEngineers = [{&quot;sr_no&quot;:25,&quot;name&quot;:&quot;ABHISHEK BAGHEL&quot;,&quot;department&quot;:&quot;CCR&quot;,&quot;site&quot;:&quot;Laxmi Organic&quot;,&quot;current_status&quot;:&quot;On leave&quot;,&quot;remarks&quot;:&quot;&quot;,&quot;mar&quot;:&quot;Laxmi Organic&quot;,&quot;apr&quot;:&quot;&quot;,&quot;may&quot;:&quot;AMNS ICC&quot;,&quot;jun&quot;:&quot;AMNS ICC&quot;,&quot;jul&quot;:&quot;AMNS ICC&quot;},{&quot;sr_no&quot;:1,&quot;name&quot;:&quot;ABHISHEK YADAV&quot;,&quot;department&quot;:&quot;CCR&quot;,&quot;site&quot;:&quot;Haldia&quot;,&quot;current_status&quot;:&quot;On site&quot;,&quot;remarks&quot;:&quot;Will be on of 15 days leave after completion of Carpet work. After 15 may it will plan for JAM&quot;,&quot;mar&quot;:&quot;Haldia&quot;,&quot;apr&quot;:&quot;Haldia&quot;,&quot;may&quot;:&quot;Haldia/JAM&quot;,&quot;jun&quot;:&quot;JAM&quot;,&quot;jul&quot;:&quot;JAM&quot;},{&quot;sr_no&quot;:2,&quot;name&quot;:&quot;AJAY KUMAR YADAV&quot;,&quot;department&quot;:&quot;CCR&quot;,&quot;site&quot;:&quot;Adani ICCC&quot;,&quot;current_status&quot;:&quot;On leave&quot;,&quot;remarks&quot;:&quot;FOR MATERIAL UNLOADING AND INITIAL SETUP&quot;,&quot;mar&quot;:&quot;Adani ICCC&quot;,&quot;apr&quot;:&quot;AMNS SMP3&quot;,&quot;may&quot;:&quot;ADANI WAR ROOM/ADANI AMBUJA&quot;,&quot;jun&quot;:&quot;ADANI AMBUJA&quot;,&quot;jul&quot;:&quot;ADANI AMBUJA&quot;},{&quot;sr_no&quot;:3,&quot;name&quot;:&quot;ANIKET KUMAR SINGH&quot;,&quot;department&quot;:&quot;CCR&quot;,&quot;site&quot;:&quot;Adani Mahan&quot;,&quot;current_status&quot;:&quot;On site&quot;,&quot;remarks&quot;:&quot;&quot;,&quot;mar&quot;:&quot;Adani Mahan&quot;,&quot;apr&quot;:&quot;Adani Mahan&quot;,&quot;may&quot;:&quot;Adani Mahan&quot;,&quot;jun&quot;:&quot;Adani Mahan&quot;,&quot;jul&quot;:&quot;Adani Mahan&quot;},{&quot;sr_no&quot;:4,&quot;name&quot;:&quot;Anil Chourasia&quot;,&quot;department&quot;:&quot;CCR&quot;,&quot;site&quot;:&quot;&quot;,&quot;current_status&quot;:&quot;On leave&quot;,&quot;remarks&quot;:&quot;Punch point - NCR region&quot;,&quot;mar&quot;:&quot;&quot;,&quot;apr&quot;:&quot;Rohtak&quot;,&quot;may&quot;:&quot;&quot;,&quot;jun&quot;:&quot;&quot;,&quot;jul&quot;:&quot;&quot;},{&quot;sr_no&quot;:5,&quot;name&quot;:&quot;ASHUTOSH SHARMA&quot;,&quot;department&quot;:&quot;CCR&quot;,&quot;site&quot;:&quot;BPCL Mumbai&quot;,&quot;current_status&quot;:&quot;On site&quot;,&quot;remarks&quot;:&quot;If payment issue persists after May then he will stay at BPCL&quot;,&quot;mar&quot;:&quot;BPCL Mumbai&quot;,&quot;apr&quot;:&quot;BPCL -SKB&quot;,&quot;may&quot;:&quot;BPCL -SKB&quot;,&quot;jun&quot;:&quot;&quot;,&quot;jul&quot;:&quot;&quot;},{&quot;sr_no&quot;:29,&quot;name&quot;:&quot;BHAWESH&quot;,&quot;department&quot;:&quot;CCR&quot;,&quot;site&quot;:&quot;Jagatpura&quot;,&quot;current_status&quot;:&quot;On leave&quot;,&quot;remarks&quot;:&quot;Terminated&quot;,&quot;mar&quot;:&quot;Jagatpura&quot;,&quot;apr&quot;:&quot;&quot;,&quot;may&quot;:&quot;&quot;,&quot;jun&quot;:&quot;&quot;,&quot;jul&quot;:&quot;&quot;},{&quot;sr_no&quot;:6,&quot;name&quot;:&quot;DEEPAK GAUD&quot;,&quot;department&quot;:&quot;CCR&quot;,&quot;site&quot;:&quot;Asian Paint&quot;,&quot;current_status&quot;:&quot;On site&quot;,&quot;remarks&quot;:&quot;He will leave on 28 april to 15 may&quot;,&quot;mar&quot;:&quot;Asian Paint&quot;,&quot;apr&quot;:&quot;Asian Paints&quot;,&quot;may&quot;:&quot;Asian Paints&quot;,&quot;jun&quot;:&quot;&quot;,&quot;jul&quot;:&quot;&quot;},{&quot;sr_no&quot;:32,&quot;name&quot;:&quot;DIVYESH DESHMUKH&quot;,&quot;department&quot;:&quot;CCR&quot;,&quot;site&quot;:&quot;Jindal Paradip&quot;,&quot;current_status&quot;:&quot;On site&quot;,&quot;remarks&quot;:&quot;&quot;,&quot;mar&quot;:&quot;Jindal Paradip&quot;,&quot;apr&quot;:&quot;Jindal Paradip&quot;,&quot;may&quot;:&quot;Jindal Paradip&quot;,&quot;jun&quot;:&quot;Jindal Paradip&quot;,&quot;jul&quot;:&quot;Jindal Paradip&quot;},{&quot;sr_no&quot;:7,&quot;name&quot;:&quot;DUSHYANT SINGH&quot;,&quot;department&quot;:&quot;CCR&quot;,&quot;site&quot;:&quot;&quot;,&quot;current_status&quot;:&quot;On leave&quot;,&quot;remarks&quot;:&quot;&quot;,&quot;mar&quot;:&quot;&quot;,&quot;apr&quot;:&quot;&quot;,&quot;may&quot;:&quot;&quot;,&quot;jun&quot;:&quot;&quot;,&quot;jul&quot;:&quot;&quot;},{&quot;sr_no&quot;:27,&quot;name&quot;:&quot;GAURAV KUMAR&quot;,&quot;department&quot;:&quot;CCR&quot;,&quot;site&quot;:&quot;Asian Paint&quot;,&quot;current_status&quot;:&quot;On site&quot;,&quot;remarks&quot;:&quot;&quot;,&quot;mar&quot;:&quot;Asian Paint&quot;,&quot;apr&quot;:&quot;Asian Paint&quot;,&quot;may&quot;:&quot;&quot;,&quot;jun&quot;:&quot;&quot;,&quot;jul&quot;:&quot;&quot;},{&quot;sr_no&quot;:8,&quot;name&quot;:&quot;GIRIJA PRASAD MISHRA&quot;,&quot;department&quot;:&quot;CCR&quot;,&quot;site&quot;:&quot;Laxmi Organic&quot;,&quot;current_status&quot;:&quot;On site&quot;,&quot;remarks&quot;:&quot;&quot;,&quot;mar&quot;:&quot;Laxmi Organic&quot;,&quot;apr&quot;:&quot;Laxmi&quot;,&quot;may&quot;:&quot;Asian Paints/New&quot;,&quot;jun&quot;:&quot;MM EXPORT&quot;,&quot;jul&quot;:&quot;MM EXPORT&quot;},{&quot;sr_no&quot;:9,&quot;name&quot;:&quot;GOVINDRAJ SINGH CHUNDAWAT&quot;,&quot;department&quot;:&quot;CCR&quot;,&quot;site&quot;:&quot;Jodhpur&quot;,&quot;current_status&quot;:&quot;On site&quot;,&quot;remarks&quot;:&quot;&quot;,&quot;mar&quot;:&quot;Jodhpur&quot;,&quot;apr&quot;:&quot;Jodhpur&quot;,&quot;may&quot;:&quot;Jodhpur&quot;,&quot;jun&quot;:&quot;Jodhpur&quot;,&quot;jul&quot;:&quot;Jodhpur&quot;},{&quot;sr_no&quot;:10,&quot;name&quot;:&quot;HITESH SUHALKA&quot;,&quot;department&quot;:&quot;CCR&quot;,&quot;site&quot;:&quot;&quot;,&quot;current_status&quot;:&quot;Leave&quot;,&quot;remarks&quot;:&quot;Terminated&quot;,&quot;mar&quot;:&quot;&quot;,&quot;apr&quot;:&quot;&quot;,&quot;may&quot;:&quot;&quot;,&quot;jun&quot;:&quot;&quot;,&quot;jul&quot;:&quot;&quot;},{&quot;sr_no&quot;:11,&quot;name&quot;:&quot;ISHWAR BHATI&quot;,&quot;department&quot;:&quot;CCR&quot;,&quot;site&quot;:&quot;GAIL Usar&quot;,&quot;current_status&quot;:&quot;On site&quot;,&quot;remarks&quot;:&quot;&quot;,&quot;mar&quot;:&quot;GAIL Usar&quot;,&quot;apr&quot;:&quot;GAIL&quot;,&quot;may&quot;:&quot;GAIL&quot;,&quot;jun&quot;:&quot;&quot;,&quot;jul&quot;:&quot;&quot;},{&quot;sr_no&quot;:33,&quot;name&quot;:&quot;Kalyan&quot;,&quot;department&quot;:&quot;&quot;,&quot;site&quot;:&quot;&quot;,&quot;current_status&quot;:&quot;&quot;,&quot;remarks&quot;:&quot;&quot;,&quot;mar&quot;:&quot;&quot;,&quot;apr&quot;:&quot;Jaipur&quot;,&quot;may&quot;:&quot;Jaipur&quot;,&quot;jun&quot;:&quot;Jaipur&quot;,&quot;jul&quot;:&quot;Jaipur&quot;},{&quot;sr_no&quot;:12,&quot;name&quot;:&quot;KAPIL SINGH BHATI&quot;,&quot;department&quot;:&quot;CCR&quot;,&quot;site&quot;:&quot;Georgea&quot;,&quot;current_status&quot;:&quot;On leave&quot;,&quot;remarks&quot;:&quot;&quot;,&quot;mar&quot;:&quot;Georgea&quot;,&quot;apr&quot;:&quot;&quot;,&quot;may&quot;:&quot;JAM&quot;,&quot;jun&quot;:&quot;MM EXPORT&quot;,&quot;jul&quot;:&quot;MM EXPORT&quot;},{&quot;sr_no&quot;:13,&quot;name&quot;:&quot;MANJEET SINGH&quot;,&quot;department&quot;:&quot;CCR&quot;,&quot;site&quot;:&quot;Jodhpur&quot;,&quot;current_status&quot;:&quot;On site&quot;,&quot;remarks&quot;:&quot;&quot;,&quot;mar&quot;:&quot;Jodhpur&quot;,&quot;apr&quot;:&quot;Jodhpur&quot;,&quot;may&quot;:&quot;AMNS SMP3&quot;,&quot;jun&quot;:&quot;AMNS SMP3&quot;,&quot;jul&quot;:&quot;AMNS SMP3&quot;},{&quot;sr_no&quot;:14,&quot;name&quot;:&quot;MONTI CHOUHAN&quot;,&quot;department&quot;:&quot;CCR&quot;,&quot;site&quot;:&quot;Jindal Steel Raigarh&quot;,&quot;current_status&quot;:&quot;On site&quot;,&quot;remarks&quot;:&quot;&quot;,&quot;mar&quot;:&quot;Jindal Steel Raigarh&quot;,&quot;apr&quot;:&quot;Jindal Steel Raigarh&quot;,&quot;may&quot;:&quot;Jindal Steel Raigarh&quot;,&quot;jun&quot;:&quot;Jindal Steel Raigarh&quot;,&quot;jul&quot;:&quot;Jindal Steel Raigarh&quot;},{&quot;sr_no&quot;:15,&quot;name&quot;:&quot;PRAVEEN YADAV&quot;,&quot;department&quot;:&quot;CCR&quot;,&quot;site&quot;:&quot;PSIL Bhubaneshwar&quot;,&quot;current_status&quot;:&quot;On site&quot;,&quot;remarks&quot;:&quot;After 15 may will move to anther site&quot;,&quot;mar&quot;:&quot;PSIL Bhubaneshwar&quot;,&quot;apr&quot;:&quot;PSIL Bhubaneshwar&quot;,&quot;may&quot;:&quot;PSIL Bhubaneshwar/JAM&quot;,&quot;jun&quot;:&quot;JAM&quot;,&quot;jul&quot;:&quot;JAM&quot;},{&quot;sr_no&quot;:16,&quot;name&quot;:&quot;PREM PRAKASH&quot;,&quot;department&quot;:&quot;CCR&quot;,&quot;site&quot;:&quot;GAIL Usar&quot;,&quot;current_status&quot;:&quot;Eminent Payroll&quot;,&quot;remarks&quot;:&quot;Payroll change from eminent to ONEPWS After june&quot;,&quot;mar&quot;:&quot;GAIL Usar&quot;,&quot;apr&quot;:&quot;GAIL&quot;,&quot;may&quot;:&quot;GAIL&quot;,&quot;jun&quot;:&quot;&quot;,&quot;jul&quot;:&quot;&quot;},{&quot;sr_no&quot;:31,&quot;name&quot;:&quot;RAHUL DEV&quot;,&quot;department&quot;:&quot;CCR&quot;,&quot;site&quot;:&quot;Adani Mahan&quot;,&quot;current_status&quot;:&quot;On site&quot;,&quot;remarks&quot;:&quot;&quot;,&quot;mar&quot;:&quot;Adani Mahan&quot;,&quot;apr&quot;:&quot;Adani Mahan&quot;,&quot;may&quot;:&quot;Adani Mahan&quot;,&quot;jun&quot;:&quot;AMNS ICC&quot;,&quot;jul&quot;:&quot;AMNS ICC&quot;},{&quot;sr_no&quot;:17,&quot;name&quot;:&quot;RAHUL KUMAR PANDIT&quot;,&quot;department&quot;:&quot;CCR&quot;,&quot;site&quot;:&quot;PGCIL&quot;,&quot;current_status&quot;:&quot;On leave from 18/02/26&quot;,&quot;remarks&quot;:&quot;&quot;,&quot;mar&quot;:&quot;PGCIL&quot;,&quot;apr&quot;:&quot;&quot;,&quot;may&quot;:&quot;&quot;,&quot;jun&quot;:&quot;&quot;,&quot;jul&quot;:&quot;&quot;},{&quot;sr_no&quot;:18,&quot;name&quot;:&quot;RANBIR KUMAR&quot;,&quot;department&quot;:&quot;CCR&quot;,&quot;site&quot;:&quot;PSIL Bhubaneshwar&quot;,&quot;current_status&quot;:&quot;On site&quot;,&quot;remarks&quot;:&quot;&quot;,&quot;mar&quot;:&quot;PSIL Bhubaneshwar&quot;,&quot;apr&quot;:&quot;PSIL Bhubaneshwar&quot;,&quot;may&quot;:&quot;AMNS SMP3&quot;,&quot;jun&quot;:&quot;AMNS SMP3&quot;,&quot;jul&quot;:&quot;AMNS SMP3&quot;},{&quot;sr_no&quot;:30,&quot;name&quot;:&quot;SANDEEP SINGH SISODIYA&quot;,&quot;department&quot;:&quot;CCR&quot;,&quot;site&quot;:&quot;Jindal Paradip&quot;,&quot;current_status&quot;:&quot;On site&quot;,&quot;remarks&quot;:&quot;&quot;,&quot;mar&quot;:&quot;Jindal Paradip&quot;,&quot;apr&quot;:&quot;Jindal Paradip&quot;,&quot;may&quot;:&quot;Jindal Paradip&quot;,&quot;jun&quot;:&quot;Jindal Paradip&quot;,&quot;jul&quot;:&quot;Jindal Paradip&quot;},{&quot;sr_no&quot;:19,&quot;name&quot;:&quot;SANJEET PRAJAPATI&quot;,&quot;department&quot;:&quot;CCR&quot;,&quot;site&quot;:&quot;Adani Mahan&quot;,&quot;current_status&quot;:&quot;On site&quot;,&quot;remarks&quot;:&quot;&quot;,&quot;mar&quot;:&quot;Adani Mahan&quot;,&quot;apr&quot;:&quot;Adani Mahan&quot;,&quot;may&quot;:&quot;Adani Mahan&quot;,&quot;jun&quot;:&quot;Adani Mahan&quot;,&quot;jul&quot;:&quot;Adani Mahan&quot;},{&quot;sr_no&quot;:21,&quot;name&quot;:&quot;SANTOSH KUMAR&quot;,&quot;department&quot;:&quot;CCR&quot;,&quot;site&quot;:&quot;Paradip&quot;,&quot;current_status&quot;:&quot;Travelling&quot;,&quot;remarks&quot;:&quot;&quot;,&quot;mar&quot;:&quot;Paradip&quot;,&quot;apr&quot;:&quot;Paradip&quot;,&quot;may&quot;:&quot;Paradip&quot;,&quot;jun&quot;:&quot;Paradip&quot;,&quot;jul&quot;:&quot;Paradip&quot;},{&quot;sr_no&quot;:22,&quot;name&quot;:&quot;SHANI DEV DHAR DUBEY&quot;,&quot;department&quot;:&quot;CCR&quot;,&quot;site&quot;:&quot;On leave&quot;,&quot;current_status&quot;:&quot;On leave&quot;,&quot;remarks&quot;:&quot;Resign&quot;,&quot;mar&quot;:&quot;&quot;,&quot;apr&quot;:&quot;&quot;,&quot;may&quot;:&quot;&quot;,&quot;jun&quot;:&quot;&quot;,&quot;jul&quot;:&quot;&quot;},{&quot;sr_no&quot;:26,&quot;name&quot;:&quot;SHUBHAM RAJ&quot;,&quot;department&quot;:&quot;CCR&quot;,&quot;site&quot;:&quot;Jindal Steel Raigarh&quot;,&quot;current_status&quot;:&quot;On site&quot;,&quot;remarks&quot;:&quot;&quot;,&quot;mar&quot;:&quot;Jindal Steel Raigarh&quot;,&quot;apr&quot;:&quot;Jindal Steel Raigarh&quot;,&quot;may&quot;:&quot;Jindal Steel Raigarh&quot;,&quot;jun&quot;:&quot;Jindal Steel Raigarh&quot;,&quot;jul&quot;:&quot;Jindal Steel Raigarh&quot;},{&quot;sr_no&quot;:24,&quot;name&quot;:&quot;SUNIL KUMAR&quot;,&quot;department&quot;:&quot;CCR&quot;,&quot;site&quot;:&quot;SNS Tirupati&quot;,&quot;current_status&quot;:&quot;On leave from 10/02/26&quot;,&quot;remarks&quot;:&quot;Terminated&quot;,&quot;mar&quot;:&quot;SNS Tirupati&quot;,&quot;apr&quot;:&quot;&quot;,&quot;may&quot;:&quot;&quot;,&quot;jun&quot;:&quot;&quot;,&quot;jul&quot;:&quot;&quot;},{&quot;sr_no&quot;:28,&quot;name&quot;:&quot;VISHAL KUMAR&quot;,&quot;department&quot;:&quot;CCR&quot;,&quot;site&quot;:&quot;on leave&quot;,&quot;current_status&quot;:&quot;On leave&quot;,&quot;remarks&quot;:&quot;&quot;,&quot;mar&quot;:&quot;&quot;,&quot;apr&quot;:&quot;&quot;,&quot;may&quot;:&quot;AMNS SMP3&quot;,&quot;jun&quot;:&quot;AMNS SMP3&quot;,&quot;jul&quot;:&quot;AMNS SMP3&quot;},{&quot;sr_no&quot;:23,&quot;name&quot;:&quot;YOGESH KUMAR GUPTA&quot;,&quot;department&quot;:&quot;CCR&quot;,&quot;site&quot;:&quot;NHPC&quot;,&quot;current_status&quot;:&quot;On site&quot;,&quot;remarks&quot;:&quot;Will join after 15 may&quot;,&quot;mar&quot;:&quot;NHPC&quot;,&quot;apr&quot;:&quot;IGGL&quot;,&quot;may&quot;:&quot;CVPPL JAMMU&quot;,&quot;jun&quot;:&quot;CVPPL JAMMU&quot;,&quot;jul&quot;:&quot;CVPPL JAMMU&quot;}];
+const initialSites = [&quot;ADANI AMBUJA&quot;,&quot;Adani ICCC&quot;,&quot;Adani Mahan&quot;,&quot;ADANI WAR ROOM&quot;,&quot;AMNS ICC&quot;,&quot;AMNS SMP3&quot;,&quot;Asian Paint&quot;,&quot;Asian Paints&quot;,&quot;BPCL -SKB&quot;,&quot;BPCL Mumbai&quot;,&quot;CVPPL JAMMU&quot;,&quot;GAIL&quot;,&quot;GAIL Usar&quot;,&quot;Georgea&quot;,&quot;Haldia&quot;,&quot;IGGL&quot;,&quot;Jagatpura&quot;,&quot;Jaipur&quot;,&quot;JAM&quot;,&quot;Jindal Paradip&quot;,&quot;Jindal Steel Raigarh&quot;,&quot;Jodhpur&quot;,&quot;Laxmi&quot;,&quot;Laxmi Organic&quot;,&quot;MM EXPORT&quot;,&quot;NHPC&quot;,&quot;Paradip&quot;,&quot;PGCIL&quot;,&quot;PSIL Bhubaneshwar&quot;,&quot;Rohtak&quot;,&quot;SNS Tirupati&quot;];
+
+const STORAGE_KEYS = {
+  engineers: &quot;siteTracker_clean_engineers_v4&quot;,
+  attendance: &quot;siteTracker_clean_attendance_v4&quot;,
+  movements: &quot;siteTracker_clean_movements_v4&quot;,
+  sites: &quot;siteTracker_clean_sites_v4&quot;,
+  idleAlerts: &quot;siteTracker_idle_alerts_v4&quot;
+};
+
+let engineers = JSON.parse(localStorage.getItem(STORAGE_KEYS.engineers) || &quot;null&quot;) || structuredClone(initialEngineers);
+let attendance = JSON.parse(localStorage.getItem(STORAGE_KEYS.attendance) || &quot;[]&quot;);
+let movements = JSON.parse(localStorage.getItem(STORAGE_KEYS.movements) || &quot;[]&quot;);
+let siteOptions = JSON.parse(localStorage.getItem(STORAGE_KEYS.sites) || &quot;null&quot;) || structuredClone(initialSites);
+let idleAlerts = JSON.parse(localStorage.getItem(STORAGE_KEYS.idleAlerts) || &quot;[]&quot;);
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEYS.engineers, JSON.stringify(engineers));
+  localStorage.setItem(STORAGE_KEYS.attendance, JSON.stringify(attendance));
+  localStorage.setItem(STORAGE_KEYS.movements, JSON.stringify(movements));
+  localStorage.setItem(STORAGE_KEYS.sites, JSON.stringify(siteOptions));
+  localStorage.setItem(STORAGE_KEYS.idleAlerts, JSON.stringify(idleAlerts));
+}
+
+function setToday() {
+  const today = new Date().toISOString().slice(0,10);
+  [&quot;attDate&quot;,&quot;depDate&quot;,&quot;relDate&quot;,&quot;idleDate&quot;].forEach(id =&gt; {
+    const el = document.getElementById(id);
+    if (el) el.value = today;
+  });
+}
+
+function normalizeStatus(status){
+  return (status || &quot;&quot;).toLowerCase().trim();
+}
+
+function getStatusClass(status) {
+  const s = normalizeStatus(status);
+  if (s.includes(&quot;on site&quot;) || s === &quot;present&quot;) return &quot;on-site&quot;;
+  if (s.includes(&quot;leave&quot;)) return &quot;on-leave&quot;;
+  if (s.includes(&quot;released&quot;)) return &quot;released&quot;;
+  if (s.includes(&quot;transit&quot;) || s.includes(&quot;travel&quot;)) return &quot;transit&quot;;
+  if (s.includes(&quot;idle&quot;)) return &quot;idle-alert&quot;;
+  return &quot;available&quot;;
+}
+
+function findEngineer(name) {
+  return engineers.find(e =&gt; e.name === name);
+}
+
+function fillSelect(selectId, items, placeholder=&quot;Select&quot;) {
+  const select = document.getElementById(selectId);
+  if (!select) return;
+  const current = select.value;
+  select.innerHTML = &quot;&quot;;
+  const blank = document.createElement(&quot;option&quot;);
+  blank.value = &quot;&quot;;
+  blank.textContent = placeholder;
+  select.appendChild(blank);
+
+  items.forEach(item =&gt; {
+    const opt = document.createElement(&quot;option&quot;);
+    opt.value = item;
+    opt.textContent = item;
+    select.appendChild(opt);
+  });
+
+  if ([...select.options].some(o =&gt; o.value === current)) select.value = current;
+}
+
+function uniqueEngineerNames() {
+  return [...new Set(engineers.map(e =&gt; e.name).filter(Boolean))].sort((a,b) =&gt; a.localeCompare(b));
+}
+
+function uniqueSites() {
+  const merged = new Set(siteOptions);
+  engineers.forEach(e =&gt; { if (e.site) merged.add(e.site); });
+  movements.forEach(m =&gt; {
+    if (m.from_site) merged.add(m.from_site);
+    if (m.to_site &amp;&amp; ![&quot;Released&quot;,&quot;On Leave&quot;,&quot;Transit&quot;,&quot;Available&quot;].includes(m.to_site)) merged.add(m.to_site);
+  });
+  idleAlerts.forEach(i =&gt; { if (i.site) merged.add(i.site); });
+  return [...merged].filter(Boolean).sort((a,b) =&gt; a.localeCompare(b));
+}
+
+function fillAllDropdowns() {
+  const names = uniqueEngineerNames();
+  const sites = uniqueSites();
+
+  fillSelect(&quot;attEngineer&quot;, names, &quot;Select engineer&quot;);
+  fillSelect(&quot;depEngineer&quot;, names, &quot;Select engineer&quot;);
+  fillSelect(&quot;relEngineer&quot;, names, &quot;Select engineer&quot;);
+  fillSelect(&quot;idleEngineer&quot;, names, &quot;Select engineer&quot;);
+
+  fillSelect(&quot;attSite&quot;, sites, &quot;Select site&quot;);
+  fillSelect(&quot;depToSite&quot;, sites, &quot;Select site&quot;);
+  fillSelect(&quot;newEngineerSite&quot;, sites, &quot;Select site&quot;);
+}
+
+function updateAutoFields() {
+  const attEmp = findEngineer(document.getElementById(&quot;attEngineer&quot;).value);
+  if (attEmp &amp;&amp; !document.getElementById(&quot;attSite&quot;).value) {
+    document.getElementById(&quot;attSite&quot;).value = attEmp.site || &quot;&quot;;
+  }
+
+  const depEmp = findEngineer(document.getElementById(&quot;depEngineer&quot;).value);
+  document.getElementById(&quot;depFromSite&quot;).value = depEmp?.site || &quot;&quot;;
+
+  const relEmp = findEngineer(document.getElementById(&quot;relEngineer&quot;).value);
+  document.getElementById(&quot;relSite&quot;).value = relEmp?.site || &quot;&quot;;
+
+  const idleEmp = findEngineer(document.getElementById(&quot;idleEngineer&quot;).value);
+  document.getElementById(&quot;idleSite&quot;).value = idleEmp?.site || &quot;&quot;;
+}
+
+function saveAttendance() {
+  const date = document.getElementById(&quot;attDate&quot;).value;
+  const name = document.getElementById(&quot;attEngineer&quot;).value;
+  const site = document.getElementById(&quot;attSite&quot;).value;
+  const status = document.getElementById(&quot;attStatus&quot;).value;
+  const remarks = document.getElementById(&quot;attRemarks&quot;).value.trim();
+
+  if (!date || !name || !status) {
+    alert(&quot;Please fill date, engineer name and status.&quot;);
+    return;
+  }
+
+  const record = { date, name, site, status, remarks };
+  const existingIndex = attendance.findIndex(x =&gt; x.date === date &amp;&amp; x.name === name);
+  if (existingIndex &gt;= 0) attendance[existingIndex] = record;
+  else attendance.unshift(record);
+
+  const emp = findEngineer(name);
+  if (emp) {
+    if (site) emp.site = site;
+    if (status === &quot;Present&quot;) emp.current_status = &quot;On site&quot;;
+    else if (status === &quot;On Leave&quot;) emp.current_status = &quot;On Leave&quot;;
+    else if (status === &quot;Transit&quot;) emp.current_status = &quot;Transit&quot;;
+    else if (status === &quot;Released&quot;) {
+      emp.current_status = &quot;Released&quot;;
+      emp.site = &quot;&quot;;
+    } else if (status === &quot;Absent&quot;) emp.current_status = &quot;Available&quot;;
+    if (remarks) emp.remarks = remarks;
+  }
+
+  saveState();
+  renderAll();
+  clearAttendanceForm(false);
+  alert(&quot;Attendance saved successfully.&quot;);
+}
+
+function deployEngineer() {
+  const date = document.getElementById(&quot;depDate&quot;).value;
+  const name = document.getElementById(&quot;depEngineer&quot;).value;
+  const fromSite = document.getElementById(&quot;depFromSite&quot;).value.trim();
+  const toSite = document.getElementById(&quot;depToSite&quot;).value.trim();
+  const remarks = document.getElementById(&quot;depRemarks&quot;).value.trim();
+
+  if (!date || !name || !toSite) {
+    alert(&quot;Please fill deployment date, engineer and new site.&quot;);
+    return;
+  }
+
+  const emp = findEngineer(name);
+  if (!emp) return;
+
+  movements.unshift({ date, name, action:&quot;Deploy&quot;, from_site: fromSite || emp.site || &quot;&quot;, to_site: toSite, remarks });
+  emp.site = toSite;
+  emp.current_status = &quot;On site&quot;;
+  if (remarks) emp.remarks = remarks;
+
+  if (!siteOptions.includes(toSite)) siteOptions.push(toSite);
+  idleAlerts = idleAlerts.filter(x =&gt; x.name !== name);
+
+  saveState();
+  renderAll();
+  document.getElementById(&quot;depRemarks&quot;).value = &quot;&quot;;
+  document.getElementById(&quot;depToSite&quot;).value = &quot;&quot;;
+  updateAutoFields();
+  alert(&quot;Engineer deployed successfully.&quot;);
+}
+
+function releaseEngineer() {
+  const date = document.getElementById(&quot;relDate&quot;).value;
+  const name = document.getElementById(&quot;relEngineer&quot;).value;
+  const site = document.getElementById(&quot;relSite&quot;).value.trim();
+  const status = document.getElementById(&quot;relStatus&quot;).value;
+  const remarks = document.getElementById(&quot;relRemarks&quot;).value.trim();
+
+  if (!date || !name) {
+    alert(&quot;Please fill release date and engineer.&quot;);
+    return;
+  }
+
+  const emp = findEngineer(name);
+  if (!emp) return;
+
+  movements.unshift({ date, name, action:&quot;Release&quot;, from_site: site || emp.site || &quot;&quot;, to_site: status, remarks });
+
+  if (status === &quot;Released&quot; || status === &quot;Available&quot;) emp.site = &quot;&quot;;
+  emp.current_status = status;
+  if (remarks) emp.remarks = remarks;
+  idleAlerts = idleAlerts.filter(x =&gt; x.name !== name);
+
+  saveState();
+  renderAll();
+  document.getElementById(&quot;relRemarks&quot;).value = &quot;&quot;;
+  updateAutoFields();
+  alert(&quot;Engineer released successfully.&quot;);
+}
+
+function saveIdleAlert() {
+  const name = document.getElementById(&quot;idleEngineer&quot;).value;
+  const site = document.getElementById(&quot;idleSite&quot;).value.trim();
+  const idleDate = document.getElementById(&quot;idleDate&quot;).value;
+  const reason = document.getElementById(&quot;idleReason&quot;).value;
+  const remarks = document.getElementById(&quot;idleRemarks&quot;).value.trim();
+
+  if (!name || !idleDate) {
+    alert(&quot;Please fill engineer name and expected idle date.&quot;);
+    return;
+  }
+
+  const existingIndex = idleAlerts.findIndex(x =&gt; x.name === name);
+  const record = { name, site, idleDate, reason, remarks };
+
+  if (existingIndex &gt;= 0) idleAlerts[existingIndex] = record;
+  else idleAlerts.unshift(record);
+
+  saveState();
+  renderAll();
+  clearIdleForm();
+  alert(&quot;Idle alert saved successfully.&quot;);
+}
+
+function removeIdleAlert(name) {
+  idleAlerts = idleAlerts.filter(x =&gt; x.name !== name);
+  saveState();
+  renderAll();
+}
+
+function addEngineer() {
+  const name = document.getElementById(&quot;newEngineerName&quot;).value.trim();
+  const department = document.getElementById(&quot;newEngineerDept&quot;).value.trim();
+  const site = document.getElementById(&quot;newEngineerSite&quot;).value.trim();
+  const current_status = document.getElementById(&quot;newEngineerStatus&quot;).value;
+
+  if (!name) {
+    alert(&quot;Please enter engineer name.&quot;);
+    return;
+  }
+  if (engineers.some(e =&gt; e.name.toLowerCase() === name.toLowerCase())) {
+    alert(&quot;Engineer already exists.&quot;);
+    return;
+  }
+
+  engineers.push({
+    sr_no: engineers.reduce((m,e)=&gt;Math.max(m, Number(e.sr_no)||0), 0) + 1,
+    name, department, site, current_status, remarks:&quot;&quot;,
+    mar:&quot;&quot;, apr:&quot;&quot;, may:&quot;&quot;, jun:&quot;&quot;, jul:&quot;&quot;
+  });
+
+  if (site &amp;&amp; !siteOptions.includes(site)) siteOptions.push(site);
+
+  document.getElementById(&quot;newEngineerName&quot;).value = &quot;&quot;;
+  document.getElementById(&quot;newEngineerDept&quot;).value = &quot;&quot;;
+  document.getElementById(&quot;newEngineerSite&quot;).value = &quot;&quot;;
+  document.getElementById(&quot;newEngineerStatus&quot;).value = &quot;On site&quot;;
+
+  saveState();
+  renderAll();
+  alert(&quot;Engineer added successfully.&quot;);
+}
+
+function addSite() {
+  const site = document.getElementById(&quot;newSiteName&quot;).value.trim();
+  if (!site) {
+    alert(&quot;Please enter site name.&quot;);
+    return;
+  }
+  if (siteOptions.some(s =&gt; s.toLowerCase() === site.toLowerCase())) {
+    alert(&quot;Site already exists.&quot;);
+    return;
+  }
+  siteOptions.push(site);
+  document.getElementById(&quot;newSiteName&quot;).value = &quot;&quot;;
+  saveState();
+  renderAll();
+  alert(&quot;Site added successfully.&quot;);
+}
+
+function getDaysLeft(dateStr) {
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const target = new Date(dateStr);
+  target.setHours(0,0,0,0);
+  return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+}
+
+function renderKPIs() {
+  const total = engineers.length;
+  const onSite = engineers.filter(e =&gt; normalizeStatus(e.current_status) === &quot;on site&quot;).length;
+  const leaveTransit = engineers.filter(e =&gt; [&quot;on leave&quot;,&quot;transit&quot;,&quot;travelling&quot;].includes(normalizeStatus(e.current_status))).length;
+  const released = engineers.filter(e =&gt; normalizeStatus(e.current_status) === &quot;released&quot;).length;
+  const upcomingIdle = idleAlerts.filter(x =&gt; getDaysLeft(x.idleDate) &gt;= 0).length;
+
+  document.getElementById(&quot;kpiTotal&quot;).textContent = total;
+  document.getElementById(&quot;kpiOnSite&quot;).textContent = onSite;
+  document.getElementById(&quot;kpiLeaveTransit&quot;).textContent = leaveTransit;
+  document.getElementById(&quot;kpiReleased&quot;).textContent = released;
+  document.getElementById(&quot;kpiIdle&quot;).textContent = upcomingIdle;
+}
+
+function renderMasterTable() {
+  const tbody = document.getElementById(&quot;masterTable&quot;);
+  const q = document.getElementById(&quot;searchEngineer&quot;).value.trim().toLowerCase();
+  const statusFilter = document.getElementById(&quot;filterStatus&quot;).value.trim().toLowerCase();
+
+  const rows = engineers
+    .filter(e =&gt; {
+      const hit = !q || [e.name, e.department, e.site, e.current_status, e.remarks].join(&quot; &quot;).toLowerCase().includes(q);
+      const statusHit = !statusFilter || normalizeStatus(e.current_status) === statusFilter;
+      return hit &amp;&amp; statusHit;
+    })
+    .sort((a,b) =&gt; (Number(a.sr_no)||999) - (Number(b.sr_no)||999))
+    .map(e =&gt; `
+      &lt;tr&gt;
+        &lt;td&gt;${e.sr_no || &quot;&quot;}&lt;/td&gt;
+        &lt;td&gt;&lt;strong&gt;${e.name || &quot;&quot;}&lt;/strong&gt;&lt;/td&gt;
+        &lt;td&gt;${e.department || &quot;&quot;}&lt;/td&gt;
+        &lt;td&gt;${e.site || &quot;&quot;}&lt;/td&gt;
+        &lt;td&gt;&lt;span class=&quot;pill ${getStatusClass(e.current_status)}&quot;&gt;${e.current_status || &quot;&quot;}&lt;/span&gt;&lt;/td&gt;
+        &lt;td&gt;${e.remarks || &quot;&quot;}&lt;/td&gt;
+        &lt;td&gt;${e.mar || &quot;&quot;}&lt;/td&gt;
+        &lt;td&gt;${e.apr || &quot;&quot;}&lt;/td&gt;
+        &lt;td&gt;${e.may || &quot;&quot;}&lt;/td&gt;
+        &lt;td&gt;${e.jun || &quot;&quot;}&lt;/td&gt;
+        &lt;td&gt;${e.jul || &quot;&quot;}&lt;/td&gt;
+      &lt;/tr&gt;`).join(&quot;&quot;);
+
+  tbody.innerHTML = rows || &#x27;&lt;tr&gt;&lt;td colspan=&quot;11&quot; style=&quot;text-align:center;color:#6b7280;&quot;&gt;No matching record found.&lt;/td&gt;&lt;/tr&gt;&#x27;;
+}
+
+function renderAttendanceTable() {
+  const tbody = document.getElementById(&quot;attendanceTable&quot;);
+  const rows = attendance.slice()
+    .sort((a,b) =&gt; (b.date || &quot;&quot;).localeCompare(a.date || &quot;&quot;) || (a.name || &quot;&quot;).localeCompare(b.name || &quot;&quot;))
+    .map(r =&gt; `
+      &lt;tr&gt;
+        &lt;td&gt;${r.date || &quot;&quot;}&lt;/td&gt;
+        &lt;td&gt;${r.name || &quot;&quot;}&lt;/td&gt;
+        &lt;td&gt;${r.site || &quot;&quot;}&lt;/td&gt;
+        &lt;td&gt;&lt;span class=&quot;pill ${getStatusClass(r.status)}&quot;&gt;${r.status || &quot;&quot;}&lt;/span&gt;&lt;/td&gt;
+        &lt;td&gt;${r.remarks || &quot;&quot;}&lt;/td&gt;
+      &lt;/tr&gt;`).join(&quot;&quot;);
+  tbody.innerHTML = rows || &#x27;&lt;tr&gt;&lt;td colspan=&quot;5&quot; style=&quot;text-align:center;color:#6b7280;&quot;&gt;No attendance entries yet.&lt;/td&gt;&lt;/tr&gt;&#x27;;
+}
+
+function renderMovementTable() {
+  const tbody = document.getElementById(&quot;movementTable&quot;);
+  const rows = movements.slice()
+    .sort((a,b) =&gt; (b.date || &quot;&quot;).localeCompare(a.date || &quot;&quot;))
+    .map(m =&gt; `
+      &lt;tr&gt;
+        &lt;td&gt;${m.date || &quot;&quot;}&lt;/td&gt;
+        &lt;td&gt;${m.name || &quot;&quot;}&lt;/td&gt;
+        &lt;td&gt;&lt;strong&gt;${m.action || &quot;&quot;}&lt;/strong&gt;&lt;/td&gt;
+        &lt;td&gt;${m.from_site || &quot;&quot;}&lt;/td&gt;
+        &lt;td&gt;${m.to_site || &quot;&quot;}&lt;/td&gt;
+        &lt;td&gt;${m.remarks || &quot;&quot;}&lt;/td&gt;
+      &lt;/tr&gt;`).join(&quot;&quot;);
+  tbody.innerHTML = rows || &#x27;&lt;tr&gt;&lt;td colspan=&quot;6&quot; style=&quot;text-align:center;color:#6b7280;&quot;&gt;No deployment/release history yet.&lt;/td&gt;&lt;/tr&gt;&#x27;;
+}
+
+function renderIdleTable() {
+  const tbody = document.getElementById(&quot;idleTable&quot;);
+  const q = document.getElementById(&quot;searchIdle&quot;).value.trim().toLowerCase();
+
+  const rows = idleAlerts.slice()
+    .filter(i =&gt; !q || [i.name, i.site, i.reason, i.remarks].join(&quot; &quot;).toLowerCase().includes(q))
+    .sort((a,b) =&gt; (a.idleDate || &quot;&quot;).localeCompare(b.idleDate || &quot;&quot;))
+    .map(i =&gt; {
+      const daysLeft = getDaysLeft(i.idleDate);
+      let cls = &quot;days-normal&quot;;
+      if (daysLeft &lt;= 2) cls = &quot;days-critical&quot;;
+      else if (daysLeft &lt;= 5) cls = &quot;days-warning&quot;;
+      return `
+      &lt;tr&gt;
+        &lt;td&gt;&lt;strong&gt;${i.name || &quot;&quot;}&lt;/strong&gt;&lt;/td&gt;
+        &lt;td&gt;${i.site || &quot;&quot;}&lt;/td&gt;
+        &lt;td&gt;${i.idleDate || &quot;&quot;}&lt;/td&gt;
+        &lt;td class=&quot;${cls}&quot;&gt;${daysLeft} day(s)&lt;/td&gt;
+        &lt;td&gt;${i.reason || &quot;&quot;}&lt;/td&gt;
+        &lt;td&gt;${i.remarks || &quot;&quot;}&lt;/td&gt;
+        &lt;td&gt;&lt;button class=&quot;danger&quot; style=&quot;min-width:auto;padding:8px 10px&quot; onclick=&quot;removeIdleAlert(&#x27;${String(i.name).replace(/&#x27;/g,&quot;\\&#x27;&quot;)}&#x27;)&quot;&gt;Remove&lt;/button&gt;&lt;/td&gt;
+      &lt;/tr&gt;`;
+    }).join(&quot;&quot;);
+  tbody.innerHTML = rows || &#x27;&lt;tr&gt;&lt;td colspan=&quot;7&quot; style=&quot;text-align:center;color:#6b7280;&quot;&gt;No idle alerts yet.&lt;/td&gt;&lt;/tr&gt;&#x27;;
+}
+
+function clearAttendanceForm(resetDate=true) {
+  if (resetDate) document.getElementById(&quot;attDate&quot;).value = new Date().toISOString().slice(0,10);
+  document.getElementById(&quot;attEngineer&quot;).value = &quot;&quot;;
+  document.getElementById(&quot;attSite&quot;).value = &quot;&quot;;
+  document.getElementById(&quot;attStatus&quot;).value = &quot;Present&quot;;
+  document.getElementById(&quot;attRemarks&quot;).value = &quot;&quot;;
+}
+
+function clearIdleForm(resetDate=true) {
+  if (resetDate) document.getElementById(&quot;idleDate&quot;).value = new Date().toISOString().slice(0,10);
+  document.getElementById(&quot;idleEngineer&quot;).value = &quot;&quot;;
+  document.getElementById(&quot;idleSite&quot;).value = &quot;&quot;;
+  document.getElementById(&quot;idleReason&quot;).value = &quot;Work Completion&quot;;
+  document.getElementById(&quot;idleRemarks&quot;).value = &quot;&quot;;
+}
+
+function downloadFile(filename, content, mimeType) {
+  const blob = new Blob([content], {type:mimeType});
+  const a = document.createElement(&quot;a&quot;);
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function exportAttendanceCSV() {
+  const headers = [&quot;Date&quot;,&quot;Name&quot;,&quot;Site&quot;,&quot;Status&quot;,&quot;Remarks&quot;];
+  const rows = attendance.slice()
+    .sort((a,b) =&gt; (a.date || &quot;&quot;).localeCompare(b.date || &quot;&quot;))
+    .map(r =&gt; [r.date, r.name, r.site || &quot;&quot;, r.status, r.remarks || &quot;&quot;]);
+  const csv = [headers, ...rows]
+    .map(row =&gt; row.map(v =&gt; `&quot;${String(v).replace(/&quot;/g, &#x27;&quot;&quot;&#x27;)}&quot;`).join(&quot;,&quot;))
+    .join(&quot;\n&quot;);
+  downloadFile(&quot;daily_attendance_register.csv&quot;, csv, &quot;text/csv;charset=utf-8;&quot;);
+}
+
+function exportFullBackup() {
+  const data = {
+    exported_on: new Date().toISOString(),
+    engineers, attendance, movements, siteOptions, idleAlerts
+  };
+  downloadFile(&quot;site_engineer_tracker_backup.json&quot;, JSON.stringify(data, null, 2), &quot;application/json&quot;);
+}
+
+function resetAllData() {
+  const ok = confirm(&quot;This will remove saved browser data and restore default data. Continue?&quot;);
+  if (!ok) return;
+  localStorage.removeItem(STORAGE_KEYS.engineers);
+  localStorage.removeItem(STORAGE_KEYS.attendance);
+  localStorage.removeItem(STORAGE_KEYS.movements);
+  localStorage.removeItem(STORAGE_KEYS.sites);
+  localStorage.removeItem(STORAGE_KEYS.idleAlerts);
+  engineers = structuredClone(initialEngineers);
+  attendance = [];
+  movements = [];
+  siteOptions = structuredClone(initialSites);
+  idleAlerts = [];
+  renderAll();
+  alert(&quot;System reset completed.&quot;);
+}
+
+function renderAll() {
+  fillAllDropdowns();
+  renderKPIs();
+  renderMasterTable();
+  renderAttendanceTable();
+  renderMovementTable();
+  renderIdleTable();
+}
+
+document.getElementById(&quot;attEngineer&quot;).addEventListener(&quot;change&quot;, updateAutoFields);
+document.getElementById(&quot;depEngineer&quot;).addEventListener(&quot;change&quot;, updateAutoFields);
+document.getElementById(&quot;relEngineer&quot;).addEventListener(&quot;change&quot;, updateAutoFields);
+document.getElementById(&quot;idleEngineer&quot;).addEventListener(&quot;change&quot;, updateAutoFields);
+
+setToday();
+renderAll();
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;"></iframe>
+    </div>
+
+    
+    </div>
+
+    
+    <div id="slideDWR" class="admin-slide">
+      <h3 class="slide-title">Daily Work Update (DWR)</h3>
+      <div class="card">
+        <p class="note">Merged from your uploaded DWR system.</p>
+        <div class="no-print" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+          <button class="btn-primary" onclick="openDWRFullScreen()">Open DWR Full Screen</button>
+        </div>
+        <iframe id="dwrFrame" style="width:100%;height:900px;border:1px solid #cfd8e3;border-radius:12px;background:#fff;" srcdoc="&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot; /&gt;
+  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot; /&gt;
+  &lt;title&gt;Daily Work Update Sheet&lt;/title&gt;
+  &lt;style&gt;
+    :root{
+      --bg:#f4f7fb;
+      --card:#ffffff;
+      --line:#d9e2ec;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --primary:#1d4ed8;
+      --success:#15803d;
+      --warning:#b45309;
+      --danger:#b91c1c;
+      --high-bg:#fee2e2;
+      --medium-bg:#fef3c7;
+      --low-bg:#dcfce7;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial, Helvetica, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+    .container{
+      max-width:1300px;
+      margin:20px auto;
+      padding:16px;
+    }
+    .title{
+      background:linear-gradient(135deg,#1d4ed8,#0f766e);
+      color:#fff;
+      padding:18px 20px;
+      border-radius:14px;
+      box-shadow:0 8px 20px rgba(0,0,0,0.08);
+      margin-bottom:18px;
+    }
+    .title h1{
+      margin:0 0 6px;
+      font-size:28px;
+    }
+    .title p{
+      margin:0;
+      font-size:14px;
+      opacity:.95;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:16px;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:16px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.04);
+    }
+    h2{
+      margin:0 0 14px;
+      font-size:20px;
+    }
+    .form-grid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap:12px;
+    }
+    .full{grid-column:1/-1}
+    label{
+      display:block;
+      font-size:13px;
+      color:var(--muted);
+      margin-bottom:6px;
+      font-weight:700;
+    }
+    input, select, textarea{
+      width:100%;
+      padding:10px 12px;
+      border:1px solid #cbd5e1;
+      border-radius:10px;
+      font-size:14px;
+      background:#fff;
+    }
+    textarea{
+      min-height:90px;
+      resize:vertical;
+    }
+    .btn-row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+    button{
+      border:none;
+      border-radius:10px;
+      padding:10px 14px;
+      cursor:pointer;
+      font-weight:700;
+      font-size:14px;
+    }
+    .btn-primary{background:var(--primary); color:#fff;}
+    .btn-secondary{background:#e5e7eb; color:#111827;}
+    .btn-success{background:var(--success); color:#fff;}
+    .btn-warning{background:var(--warning); color:#fff;}
+    .btn-danger{background:var(--danger); color:#fff;}
+    .stats{
+      display:grid;
+      grid-template-columns: repeat(4,1fr);
+      gap:10px;
+      margin-bottom:14px;
+    }
+    .stat{
+      border-radius:12px;
+      padding:12px;
+      color:#111827;
+      border:1px solid var(--line);
+      background:#f8fafc;
+    }
+    .stat b{
+      display:block;
+      font-size:22px;
+      margin-top:6px;
+    }
+    .filters{
+      display:grid;
+      grid-template-columns: repeat(4,1fr);
+      gap:10px;
+      margin-bottom:14px;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:13px;
+      background:#fff;
+    }
+    th, td{
+      border:1px solid var(--line);
+      padding:9px 8px;
+      text-align:left;
+      vertical-align:top;
+    }
+    th{
+      background:#eff6ff;
+      position:sticky;
+      top:0;
+      z-index:1;
+    }
+    .table-wrap{
+      max-height:420px;
+      overflow:auto;
+      border:1px solid var(--line);
+      border-radius:12px;
+    }
+    .priority-high{background:var(--high-bg); font-weight:700;}
+    .priority-medium{background:var(--medium-bg); font-weight:700;}
+    .priority-low{background:var(--low-bg); font-weight:700;}
+    .badge{
+      display:inline-block;
+      padding:4px 8px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:700;
+    }
+    .pending{background:#fee2e2; color:#991b1b;}
+    .progress{background:#dbeafe; color:#1d4ed8;}
+    .hold{background:#fef3c7; color:#92400e;}
+    .done{background:#dcfce7; color:#166534;}
+    .report-box{
+      background:#f8fafc;
+      border:1px dashed #94a3b8;
+      border-radius:12px;
+      padding:14px;
+      min-height:260px;
+      white-space:pre-wrap;
+      line-height:1.5;
+      font-size:14px;
+    }
+    .small{
+      font-size:12px;
+      color:var(--muted);
+    }
+    @media (max-width: 980px){
+      .grid{grid-template-columns:1fr}
+      .stats{grid-template-columns: repeat(2,1fr);}
+      .filters{grid-template-columns: repeat(2,1fr);}
+      .form-grid{grid-template-columns:1fr;}
+    }
+    @media print{
+      body{background:#fff;}
+      .no-print{display:none !important;}
+      .container{max-width:100%; margin:0; padding:0;}
+      .card, .title{box-shadow:none;}
+      .table-wrap{max-height:none; overflow:visible;}
+      table{font-size:11px;}
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class=&quot;container&quot;&gt;
+    &lt;div class=&quot;title&quot;&gt;
+      &lt;h1&gt;Daily Work Update Sheet&lt;/h1&gt;
+      &lt;p&gt;Priority-wise task tracker with instant report generation, filtering, print, export, and local save.&lt;/p&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;grid&quot;&gt;
+      &lt;div class=&quot;card no-print&quot;&gt;
+        &lt;h2&gt;Add / Update Daily Work&lt;/h2&gt;
+        &lt;div class=&quot;form-grid&quot;&gt;
+          &lt;div&gt;
+            &lt;label&gt;Date&lt;/label&gt;
+            &lt;input type=&quot;date&quot; id=&quot;workDate&quot;&gt;
+          &lt;/div&gt;
+          &lt;div&gt;
+            &lt;label&gt;Project / Site&lt;/label&gt;
+            &lt;input type=&quot;text&quot; id=&quot;project&quot; placeholder=&quot;Enter project or site name&quot;&gt;
+          &lt;/div&gt;
+          &lt;div&gt;
+            &lt;label&gt;Priority&lt;/label&gt;
+            &lt;select id=&quot;priority&quot;&gt;
+              &lt;option value=&quot;High&quot;&gt;High&lt;/option&gt;
+              &lt;option value=&quot;Medium&quot; selected&gt;Medium&lt;/option&gt;
+              &lt;option value=&quot;Low&quot;&gt;Low&lt;/option&gt;
+            &lt;/select&gt;
+          &lt;/div&gt;
+          &lt;div class=&quot;full&quot;&gt;
+            &lt;label&gt;Work Description&lt;/label&gt;
+            &lt;textarea id=&quot;description&quot; placeholder=&quot;Enter work details&quot;&gt;&lt;/textarea&gt;
+          &lt;/div&gt;
+          &lt;div&gt;
+            &lt;label&gt;Status&lt;/label&gt;
+            &lt;select id=&quot;status&quot;&gt;
+              &lt;option value=&quot;Pending&quot;&gt;Pending&lt;/option&gt;
+              &lt;option value=&quot;In Progress&quot;&gt;In Progress&lt;/option&gt;
+              &lt;option value=&quot;On Hold&quot;&gt;On Hold&lt;/option&gt;
+              &lt;option value=&quot;Completed&quot;&gt;Completed&lt;/option&gt;
+            &lt;/select&gt;
+          &lt;/div&gt;
+          &lt;div&gt;
+            &lt;label&gt;Planned %&lt;/label&gt;
+            &lt;input type=&quot;number&quot; id=&quot;planned&quot; min=&quot;0&quot; max=&quot;100&quot; value=&quot;100&quot;&gt;
+          &lt;/div&gt;
+          &lt;div&gt;
+            &lt;label&gt;Actual %&lt;/label&gt;
+            &lt;input type=&quot;number&quot; id=&quot;actual&quot; min=&quot;0&quot; max=&quot;100&quot; value=&quot;0&quot;&gt;
+          &lt;/div&gt;
+          &lt;div class=&quot;full&quot;&gt;
+            &lt;label&gt;Remarks / Dependency / Delay Reason&lt;/label&gt;
+            &lt;textarea id=&quot;remarks&quot; placeholder=&quot;Mention issue, dependency, delay reason, or update&quot;&gt;&lt;/textarea&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;btn-row&quot;&gt;
+          &lt;button class=&quot;btn-primary&quot; onclick=&quot;addEntry()&quot;&gt;Add Entry&lt;/button&gt;
+          &lt;button class=&quot;btn-secondary&quot; onclick=&quot;clearForm()&quot;&gt;Clear&lt;/button&gt;
+          &lt;button class=&quot;btn-success&quot; onclick=&quot;saveData()&quot;&gt;Save Data&lt;/button&gt;
+          &lt;button class=&quot;btn-warning&quot; onclick=&quot;downloadData()&quot;&gt;Download JSON&lt;/button&gt;
+          &lt;button class=&quot;btn-secondary&quot; onclick=&quot;document.getElementById(&#x27;fileInput&#x27;).click()&quot;&gt;Upload JSON&lt;/button&gt;
+          &lt;button class=&quot;btn-danger&quot; onclick=&quot;clearAllData()&quot;&gt;Clear All&lt;/button&gt;
+          &lt;input type=&quot;file&quot; id=&quot;fileInput&quot; accept=&quot;.json&quot; style=&quot;display:none&quot; onchange=&quot;uploadData(event)&quot;&gt;
+        &lt;/div&gt;
+        &lt;p class=&quot;small&quot; style=&quot;margin-top:10px;&quot;&gt;
+          Data saves in browser automatically when you click &lt;b&gt;Save Data&lt;/b&gt;. You can also download/upload JSON backup.
+        &lt;/p&gt;
+      &lt;/div&gt;
+
+      &lt;div class=&quot;card&quot;&gt;
+        &lt;h2&gt;Daily Summary&lt;/h2&gt;
+        &lt;div class=&quot;stats&quot;&gt;
+          &lt;div class=&quot;stat&quot;&gt;&lt;span&gt;Total Tasks&lt;/span&gt;&lt;b id=&quot;totalTasks&quot;&gt;0&lt;/b&gt;&lt;/div&gt;
+          &lt;div class=&quot;stat&quot;&gt;&lt;span&gt;High Priority&lt;/span&gt;&lt;b id=&quot;highTasks&quot;&gt;0&lt;/b&gt;&lt;/div&gt;
+          &lt;div class=&quot;stat&quot;&gt;&lt;span&gt;Completed&lt;/span&gt;&lt;b id=&quot;completedTasks&quot;&gt;0&lt;/b&gt;&lt;/div&gt;
+          &lt;div class=&quot;stat&quot;&gt;&lt;span&gt;Pending&lt;/span&gt;&lt;b id=&quot;pendingTasks&quot;&gt;0&lt;/b&gt;&lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;div class=&quot;no-print&quot;&gt;
+          &lt;div class=&quot;btn-row&quot; style=&quot;margin-top:0&quot;&gt;
+            &lt;button class=&quot;btn-primary&quot; onclick=&quot;generateReport()&quot;&gt;Generate Report&lt;/button&gt;
+            &lt;button class=&quot;btn-secondary&quot; onclick=&quot;copyReport()&quot;&gt;Copy Report&lt;/button&gt;
+            &lt;button class=&quot;btn-secondary&quot; onclick=&quot;window.print()&quot;&gt;Print Full Sheet&lt;/button&gt;
+            &lt;button class=&quot;btn-success&quot; onclick=&quot;saveReportPDF()&quot;&gt;Final Report PDF&lt;/button&gt;
+            &lt;button class=&quot;btn-secondary&quot; onclick=&quot;exportCSV()&quot;&gt;Export CSV&lt;/button&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;h3 style=&quot;margin:16px 0 10px;&quot;&gt;Generated Report&lt;/h3&gt;
+        &lt;div id=&quot;reportOutput&quot; class=&quot;report-box&quot;&gt;Click &quot;Generate Report&quot; to create a priority-wise daily work summary.&lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;card&quot; style=&quot;margin-top:16px;&quot;&gt;
+      &lt;h2&gt;Task Register&lt;/h2&gt;
+
+      &lt;div class=&quot;filters no-print&quot;&gt;
+        &lt;div&gt;
+          &lt;label&gt;Filter by Date&lt;/label&gt;
+          &lt;input type=&quot;date&quot; id=&quot;filterDate&quot; onchange=&quot;renderTable()&quot;&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+          &lt;label&gt;Filter by Priority&lt;/label&gt;
+          &lt;select id=&quot;filterPriority&quot; onchange=&quot;renderTable()&quot;&gt;
+            &lt;option value=&quot;&quot;&gt;All&lt;/option&gt;
+            &lt;option&gt;High&lt;/option&gt;
+            &lt;option&gt;Medium&lt;/option&gt;
+            &lt;option&gt;Low&lt;/option&gt;
+          &lt;/select&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+          &lt;label&gt;Filter by Status&lt;/label&gt;
+          &lt;select id=&quot;filterStatus&quot; onchange=&quot;renderTable()&quot;&gt;
+            &lt;option value=&quot;&quot;&gt;All&lt;/option&gt;
+            &lt;option&gt;Pending&lt;/option&gt;
+            &lt;option&gt;In Progress&lt;/option&gt;
+            &lt;option&gt;On Hold&lt;/option&gt;
+            &lt;option&gt;Completed&lt;/option&gt;
+          &lt;/select&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+          &lt;label&gt;Search&lt;/label&gt;
+          &lt;input type=&quot;text&quot; id=&quot;searchText&quot; placeholder=&quot;Project / work / remarks&quot; oninput=&quot;renderTable()&quot;&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;div class=&quot;table-wrap&quot;&gt;
+        &lt;table&gt;
+          &lt;thead&gt;
+            &lt;tr&gt;
+              &lt;th&gt;S.No.&lt;/th&gt;
+              &lt;th&gt;Date&lt;/th&gt;
+              &lt;th&gt;Project / Site&lt;/th&gt;
+              &lt;th&gt;Priority&lt;/th&gt;
+              &lt;th&gt;Description&lt;/th&gt;
+              &lt;th&gt;Status&lt;/th&gt;
+              &lt;th&gt;Plan %&lt;/th&gt;
+              &lt;th&gt;Actual %&lt;/th&gt;
+              &lt;th&gt;Remarks / Delay&lt;/th&gt;
+              &lt;th class=&quot;no-print&quot;&gt;Action&lt;/th&gt;
+            &lt;/tr&gt;
+          &lt;/thead&gt;
+          &lt;tbody id=&quot;taskTableBody&quot;&gt;&lt;/tbody&gt;
+        &lt;/table&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;script&gt;
+    let entries = JSON.parse(localStorage.getItem(&quot;dailyWorkEntries&quot;) || &quot;[]&quot;);
+    let editIndex = -1;
+
+    const today = new Date().toISOString().split(&#x27;T&#x27;)[0];
+    document.getElementById(&#x27;workDate&#x27;).value = today;
+
+    function getFormData(){
+      return {
+        date: document.getElementById(&#x27;workDate&#x27;).value,
+        project: document.getElementById(&#x27;project&#x27;).value.trim(),
+        priority: document.getElementById(&#x27;priority&#x27;).value,
+        description: document.getElementById(&#x27;description&#x27;).value.trim(),
+        status: document.getElementById(&#x27;status&#x27;).value,
+        planned: document.getElementById(&#x27;planned&#x27;).value || 0,
+        actual: document.getElementById(&#x27;actual&#x27;).value || 0,
+        remarks: document.getElementById(&#x27;remarks&#x27;).value.trim()
+      };
+    }
+
+    function addEntry(){
+      const data = getFormData();
+      if(!data.date || !data.project || !data.description){
+        alert(&quot;Please fill Date, Project / Site, and Work Description.&quot;);
+        return;
+      }
+
+      if(editIndex &gt; -1){
+        entries[editIndex] = data;
+        editIndex = -1;
+      } else {
+        entries.push(data);
+      }
+
+      clearForm(false);
+      saveData(false);
+      renderTable();
+      generateReport();
+    }
+
+    function clearForm(resetDate=true){
+      if(resetDate) document.getElementById(&#x27;workDate&#x27;).value = today;
+      document.getElementById(&#x27;project&#x27;).value = &quot;&quot;;
+      document.getElementById(&#x27;priority&#x27;).value = &quot;Medium&quot;;
+      document.getElementById(&#x27;description&#x27;).value = &quot;&quot;;
+      document.getElementById(&#x27;status&#x27;).value = &quot;Pending&quot;;
+      document.getElementById(&#x27;planned&#x27;).value = 100;
+      document.getElementById(&#x27;actual&#x27;).value = 0;
+      document.getElementById(&#x27;remarks&#x27;).value = &quot;&quot;;
+      editIndex = -1;
+    }
+
+    function saveData(showMsg=true){
+      localStorage.setItem(&quot;dailyWorkEntries&quot;, JSON.stringify(entries));
+      if(showMsg) alert(&quot;Data saved successfully.&quot;);
+    }
+
+    function clearAllData(){
+      if(confirm(&quot;Are you sure you want to delete all entries?&quot;)){
+        entries = [];
+        saveData(false);
+        renderTable();
+        generateReport();
+      }
+    }
+
+    function filteredEntries(){
+      const fDate = document.getElementById(&#x27;filterDate&#x27;).value;
+      const fPriority = document.getElementById(&#x27;filterPriority&#x27;).value;
+      const fStatus = document.getElementById(&#x27;filterStatus&#x27;).value;
+      const search = document.getElementById(&#x27;searchText&#x27;).value.toLowerCase().trim();
+
+      return entries.filter(e =&gt; {
+        const matchesDate = !fDate || e.date === fDate;
+        const matchesPriority = !fPriority || e.priority === fPriority;
+        const matchesStatus = !fStatus || e.status === fStatus;
+        const blob = `${e.project} ${e.description} ${e.remarks}`.toLowerCase();
+        const matchesSearch = !search || blob.includes(search);
+        return matchesDate &amp;&amp; matchesPriority &amp;&amp; matchesStatus &amp;&amp; matchesSearch;
+      });
+    }
+
+    function renderTable(){
+      const tbody = document.getElementById(&#x27;taskTableBody&#x27;);
+      const data = filteredEntries();
+      tbody.innerHTML = &quot;&quot;;
+
+      data.forEach((e, i) =&gt; {
+        const tr = document.createElement(&#x27;tr&#x27;);
+
+        let pClass = e.priority === &quot;High&quot; ? &quot;priority-high&quot; : e.priority === &quot;Medium&quot; ? &quot;priority-medium&quot; : &quot;priority-low&quot;;
+        let sClass = e.status === &quot;Pending&quot; ? &quot;pending&quot; : e.status === &quot;In Progress&quot; ? &quot;progress&quot; : e.status === &quot;On Hold&quot; ? &quot;hold&quot; : &quot;done&quot;;
+
+        tr.innerHTML = `
+          &lt;td&gt;${i+1}&lt;/td&gt;
+          &lt;td&gt;${e.date || &quot;&quot;}&lt;/td&gt;
+          &lt;td&gt;${escapeHtml(e.project || &quot;&quot;)}&lt;/td&gt;
+          &lt;td class=&quot;${pClass}&quot;&gt;${e.priority || &quot;&quot;}&lt;/td&gt;
+          &lt;td&gt;${escapeHtml(e.description || &quot;&quot;)}&lt;/td&gt;
+          &lt;td&gt;&lt;span class=&quot;badge ${sClass}&quot;&gt;${e.status || &quot;&quot;}&lt;/span&gt;&lt;/td&gt;
+          &lt;td&gt;${e.planned || 0}&lt;/td&gt;
+          &lt;td&gt;${e.actual || 0}&lt;/td&gt;
+          &lt;td&gt;${escapeHtml(e.remarks || &quot;&quot;)}&lt;/td&gt;
+          &lt;td class=&quot;no-print&quot;&gt;
+            &lt;button class=&quot;btn-secondary&quot; style=&quot;padding:6px 8px; font-size:12px;&quot; onclick=&quot;editEntry(${entries.indexOf(e)})&quot;&gt;Edit&lt;/button&gt;
+            &lt;button class=&quot;btn-danger&quot; style=&quot;padding:6px 8px; font-size:12px;&quot; onclick=&quot;deleteEntry(${entries.indexOf(e)})&quot;&gt;Delete&lt;/button&gt;
+          &lt;/td&gt;
+        `;
+        tbody.appendChild(tr);
+      });
+
+      updateStats(data);
+    }
+
+    function updateStats(data){
+      document.getElementById(&#x27;totalTasks&#x27;).textContent = data.length;
+      document.getElementById(&#x27;highTasks&#x27;).textContent = data.filter(e =&gt; e.priority === &quot;High&quot;).length;
+      document.getElementById(&#x27;completedTasks&#x27;).textContent = data.filter(e =&gt; e.status === &quot;Completed&quot;).length;
+      document.getElementById(&#x27;pendingTasks&#x27;).textContent = data.filter(e =&gt; e.status === &quot;Pending&quot; || e.status === &quot;In Progress&quot; || e.status === &quot;On Hold&quot;).length;
+    }
+
+    function editEntry(index){
+      const e = entries[index];
+      document.getElementById(&#x27;workDate&#x27;).value = e.date || today;
+      document.getElementById(&#x27;project&#x27;).value = e.project || &quot;&quot;;
+      document.getElementById(&#x27;priority&#x27;).value = e.priority || &quot;Medium&quot;;
+      document.getElementById(&#x27;description&#x27;).value = e.description || &quot;&quot;;
+      document.getElementById(&#x27;status&#x27;).value = e.status || &quot;Pending&quot;;
+      document.getElementById(&#x27;planned&#x27;).value = e.planned || 0;
+      document.getElementById(&#x27;actual&#x27;).value = e.actual || 0;
+      document.getElementById(&#x27;remarks&#x27;).value = e.remarks || &quot;&quot;;
+      editIndex = index;
+      window.scrollTo({ top: 0, behavior: &#x27;smooth&#x27; });
+    }
+
+    function deleteEntry(index){
+      if(confirm(&quot;Delete this entry?&quot;)){
+        entries.splice(index,1);
+        saveData(false);
+        renderTable();
+        generateReport();
+      }
+    }
+
+    function generateReport(){
+      const data = filteredEntries();
+      const todayFilter = document.getElementById(&#x27;filterDate&#x27;).value || &quot;All Dates&quot;;
+
+      const high = data.filter(e =&gt; e.priority === &quot;High&quot;);
+      const medium = data.filter(e =&gt; e.priority === &quot;Medium&quot;);
+      const low = data.filter(e =&gt; e.priority === &quot;Low&quot;);
+      const completed = data.filter(e =&gt; e.status === &quot;Completed&quot;).length;
+      const inProgress = data.filter(e =&gt; e.status === &quot;In Progress&quot;).length;
+      const pending = data.filter(e =&gt; e.status === &quot;Pending&quot;).length;
+      const onHold = data.filter(e =&gt; e.status === &quot;On Hold&quot;).length;
+
+      let report = &quot;&quot;;
+      report += &quot;DAILY WORK UPDATE REPORT\n&quot;;
+      report += &quot;====================================\n&quot;;
+      report += `Report Date Filter : ${todayFilter}\n`;
+      report += `Total Tasks        : ${data.length}\n`;
+      report += `Completed          : ${completed}\n`;
+      report += `In Progress        : ${inProgress}\n`;
+      report += `Pending            : ${pending}\n`;
+      report += `On Hold            : ${onHold}\n\n`;
+
+      report += `HIGH PRIORITY TASKS (${high.length})\n`;
+      report += &quot;------------------------------------\n&quot;;
+      report += high.length ? high.map((e, i) =&gt;
+        `${i+1}. [${e.status}] ${e.project} - ${e.description}\n   Actual: ${e.actual || 0}% | Remarks: ${e.remarks || &quot;-&quot;}`
+      ).join(&quot;\n&quot;) : &quot;No high priority tasks.\n&quot;;
+
+      report += &quot;\n\nMEDIUM PRIORITY TASKS (&quot; + medium.length + &quot;)\n&quot;;
+      report += &quot;------------------------------------\n&quot;;
+      report += medium.length ? medium.map((e, i) =&gt;
+        `${i+1}. [${e.status}] ${e.project} - ${e.description}\n   Actual: ${e.actual || 0}% | Remarks: ${e.remarks || &quot;-&quot;}`
+      ).join(&quot;\n&quot;) : &quot;No medium priority tasks.\n&quot;;
+
+      report += &quot;\n\nLOW PRIORITY TASKS (&quot; + low.length + &quot;)\n&quot;;
+      report += &quot;------------------------------------\n&quot;;
+      report += low.length ? low.map((e, i) =&gt;
+        `${i+1}. [${e.status}] ${e.project} - ${e.description}\n   Actual: ${e.actual || 0}% | Remarks: ${e.remarks || &quot;-&quot;}`
+      ).join(&quot;\n&quot;) : &quot;No low priority tasks.\n&quot;;
+
+      const delayed = data.filter(e =&gt; Number(e.actual) &lt; Number(e.planned) &amp;&amp; e.status !== &quot;Completed&quot;);
+      report += &quot;\n\nDELAY / DEPENDENCY OBSERVATION\n&quot;;
+      report += &quot;------------------------------------\n&quot;;
+      report += delayed.length ? delayed.map((e, i) =&gt;
+        `${i+1}. ${e.project} - ${e.description}\n   Planned: ${e.planned}% | Actual: ${e.actual}% | Reason: ${e.remarks || &quot;Not mentioned&quot;}`
+      ).join(&quot;\n&quot;) : &quot;No delay observations found.\n&quot;;
+
+      document.getElementById(&#x27;reportOutput&#x27;).textContent = report;
+    }
+
+
+    function saveReportPDF(){
+      generateReport();
+      const report = document.getElementById(&#x27;reportOutput&#x27;).textContent || &quot;&quot;;
+      const project = document.getElementById(&#x27;filterDate&#x27;).value || new Date().toISOString().split(&#x27;T&#x27;)[0];
+
+      const win = window.open(&quot;&quot;, &quot;_blank&quot;);
+      win.document.write(`
+        &lt;!DOCTYPE html&gt;
+        &lt;html&gt;
+        &lt;head&gt;
+          &lt;title&gt;Daily Work Update Report PDF&lt;/title&gt;
+          &lt;style&gt;
+            body{
+              font-family: Arial, Helvetica, sans-serif;
+              margin: 24px;
+              color: #111827;
+            }
+            .header{
+              text-align:center;
+              border-bottom:2px solid #1d4ed8;
+              padding-bottom:12px;
+              margin-bottom:18px;
+            }
+            .header h1{
+              margin:0;
+              color:#1d4ed8;
+              font-size:24px;
+            }
+            .header p{
+              margin:6px 0 0;
+              font-size:13px;
+              color:#374151;
+            }
+            pre{
+              white-space:pre-wrap;
+              font-size:13px;
+              line-height:1.5;
+              border:1px solid #d1d5db;
+              padding:16px;
+              border-radius:8px;
+            }
+            .footer{
+              margin-top:18px;
+              font-size:11px;
+              color:#6b7280;
+              text-align:center;
+            }
+            @media print{
+              body{margin:14mm;}
+            }
+          &lt;/style&gt;
+        &lt;/head&gt;
+        &lt;body&gt;
+          &lt;div class=&quot;header&quot;&gt;
+            &lt;h1&gt;ONEPWS Pvt. Ltd.&lt;/h1&gt;
+            &lt;p&gt;Daily Work Update Final Report&lt;/p&gt;
+          &lt;/div&gt;
+          &lt;pre&gt;${escapeHtml(report)}&lt;/pre&gt;
+          &lt;div class=&quot;footer&quot;&gt;Generated from Daily Work Update Sheet&lt;/div&gt;
+          &lt;script&gt;
+            window.onload = function(){
+              window.print();
+            };
+          &lt;\/script&gt;
+        &lt;/body&gt;
+        &lt;/html&gt;
+      `);
+      win.document.close();
+    }
+
+    function copyReport(){
+      const report = document.getElementById(&#x27;reportOutput&#x27;).textContent;
+      navigator.clipboard.writeText(report)
+        .then(() =&gt; alert(&quot;Report copied successfully.&quot;))
+        .catch(() =&gt; alert(&quot;Copy failed. Please copy manually.&quot;));
+    }
+
+    function downloadData(){
+      const blob = new Blob([JSON.stringify(entries, null, 2)], {type:&quot;application/json&quot;});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement(&quot;a&quot;);
+      a.href = url;
+      a.download = &quot;daily_work_update_data.json&quot;;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function uploadData(event){
+      const file = event.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e){
+        try{
+          const imported = JSON.parse(e.target.result);
+          if(Array.isArray(imported)){
+            entries = imported;
+            saveData(false);
+            renderTable();
+            generateReport();
+            alert(&quot;Data uploaded successfully.&quot;);
+          } else {
+            alert(&quot;Invalid file format.&quot;);
+          }
+        } catch(err){
+          alert(&quot;Invalid JSON file.&quot;);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function exportCSV(){
+      const data = filteredEntries();
+      const headers = [&quot;Date&quot;,&quot;Project/Site&quot;,&quot;Priority&quot;,&quot;Description&quot;,&quot;Status&quot;,&quot;Planned %&quot;,&quot;Actual %&quot;,&quot;Remarks&quot;];
+      const rows = data.map(e =&gt; [
+        e.date, e.project, e.priority, e.description, e.status, e.planned, e.actual, e.remarks
+      ]);
+      let csv = [headers, ...rows].map(row =&gt;
+        row.map(val =&gt; `&quot;${String(val ?? &quot;&quot;).replace(/&quot;/g, &#x27;&quot;&quot;&#x27;)}&quot;`).join(&quot;,&quot;)
+      ).join(&quot;\n&quot;);
+
+      const blob = new Blob([csv], {type:&quot;text/csv;charset=utf-8;&quot;});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement(&quot;a&quot;);
+      a.href = url;
+      a.download = &quot;daily_work_update_report.csv&quot;;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function escapeHtml(str){
+      return String(str)
+        .replace(/&amp;/g, &quot;&amp;amp;&quot;)
+        .replace(/&lt;/g, &quot;&amp;lt;&quot;)
+        .replace(/&gt;/g, &quot;&amp;gt;&quot;)
+        .replace(/&quot;/g, &quot;&amp;quot;&quot;)
+        .replace(/&#x27;/g, &quot;&amp;#039;&quot;);
+    }
+
+    renderTable();
+    generateReport();
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;"></iframe>
+      </div>
+    </div>
+
+    
+    <div id="slideCompliance" class="admin-slide">
+      <h3 class="slide-title">Labour Monthly Compliance Status</h3>
+
+      <div class="card no-print">
+        <h3>Add / Update Monthly Compliance</h3>
+        <div class="grid">
+          <div><label>Month</label><input type="month" id="compMonth"></div>
+          <div><label>Site Name</label><input id="compSite" placeholder="Example: BPCL SKB"></div>
+          <div><label>Wages Payment</label><select id="compWages"><option>Done</option><option selected>Pending</option></select></div>
+          <div><label>PF</label><select id="compPF"><option>Done</option><option selected>Pending</option></select></div>
+          <div><label>ESI</label><select id="compESI"><option>Done</option><option selected>Pending</option></select></div>
+          <div><label>Remark</label><input id="compRemark" placeholder="Reason / pending detail"></div>
+        </div>
+        <div class="actions">
+          <button class="btn-success" onclick="saveComplianceStatus()">Save Compliance Status</button>
+          <button class="btn-light" onclick="clearComplianceForm()">Clear</button>
+          <button class="btn-warning" onclick="exportComplianceCSV()">Export Compliance CSV</button><button class="btn-primary" onclick="printComplianceReport()">Print / Save Compliance PDF</button><button class="btn-success" onclick="generateComplianceAlertReport()">Pending Alert Report</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Compliance Summary</h3>
+        <div class="summary">
+          <div class="box"><strong id="compTotal">0</strong>Total Records</div>
+          <div class="box"><strong id="compWagesPending">0</strong>Wages Pending</div>
+          <div class="box"><strong id="compPFPending">0</strong>PF Pending</div>
+          <div class="box"><strong id="compESIPending">0</strong>ESI Pending</div>
+          <div class="box"><strong id="compAllDone">0</strong>All Done</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Site & Month Wise Compliance Register</h3>
+        <div class="grid no-print" style="margin-bottom:12px">
+          <div><label>Filter Month</label><input type="month" id="compFilterMonth" onchange="renderComplianceTable()"></div>
+          <div><label>Search Site / Remark</label><input id="compSearch" placeholder="Search..." oninput="renderComplianceTable()"></div>
+        </div>
+        <div class="table-wrap">
+          <table id="complianceTable">
+            <thead>
+              <tr>
+                <th>Sr. No.</th>
+                <th>Month</th>
+                <th>Site Name</th>
+                <th>Wages Payment</th>
+                <th>PF</th>
+                <th>ESI</th>
+                <th>Remark</th>
+                <th class="no-print">Action</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="slideSiteManagement" class="admin-slide">
+
+
+      <h3 class="slide-title">Site Management</h3>
+      <div class="card no-print">
+      <h3>Admin Site Management</h3>
+      <div class="site-card-grid">
+        <div><label>New Site Login ID</label><input id="newSiteLogin" placeholder="Example: iocl.chennai"></div>
+        <div><label>New Site Password</label><input id="newSitePassword" placeholder="Example: ioc123"></div>
+        <div><label>Site / Project Name</label><input id="newSiteName" placeholder="Example: IOCL Chennai"></div>
+        <div style="display:flex;align-items:end"><button class="btn-success" style="width:100%" onclick="addNewSite()">Add / Update Site</button></div>
+      </div>
+      <p class="note">Use lowercase login ID without spaces, like <b>client.location</b>. Added sites will work on this same browser/computer.</p>
+      <div class="table-wrap" style="margin-top:12px">
+        <table id="siteUserTable">
+          <thead><tr><th>Sr.</th><th>Login ID</th><th>Password</th><th>Site / Project Name</th><th class="no-print">Action</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+
+    
+    </div>
+  </section>
+</div>
+
+<script>
+var DEFAULT_SITE_USERS = {
+  "jindal.paradip": { password: "jp123", siteName: "Jindal Paradip" },
+  "jindal.raigarh": { password: "jr123", siteName: "Jindal Raigarh" },
+  "asian.dahej": { password: "ad123", siteName: "Asian Paints Dahej" },
+  "bpcl.skb": { password: "bpcl123", siteName: "BPCL SKB" },
+  "psil.bhubaneshwar": { password: "psil123", siteName: "PSIL Bhubaneshwar" },
+  "gail.usar": { password: "gail123", siteName: "GAIL Usar" },
+  "laxmi.dahej": { password: "laxmi123", siteName: "Laxmi Organic Dahej" },
+  "adani.mahan": { password: "am123", siteName: "Adani Mahan" },
+  "nhpc.assam": { password: "nhpc123", siteName: "NHPC Assam" }
+};
+
+var SITE_USERS = loadSiteUsers();
+
+function loadSiteUsers(){
+  var custom = {};
+  try { custom = JSON.parse(localStorage.getItem("offlineSiteUsers") || "{}"); } catch(e) { custom = {}; }
+  var merged = {};
+  for(var k in DEFAULT_SITE_USERS){ merged[k] = DEFAULT_SITE_USERS[k]; }
+  for(var c in custom){ merged[c] = custom[c]; }
+  return merged;
+}
+
+function saveCustomSiteUsers(){
+  var custom = {};
+  for(var k in SITE_USERS){
+    if(!DEFAULT_SITE_USERS[k]) custom[k] = SITE_USERS[k];
+  }
+  localStorage.setItem("offlineSiteUsers", JSON.stringify(custom));
+}
+
+function normalizeLoginId(id){
+  return String(id || "").trim().toLowerCase().replace(/\s+/g, ".");
+}
+
+function addNewSite(){
+  var login = normalizeLoginId(document.getElementById("newSiteLogin").value);
+  var pass = document.getElementById("newSitePassword").value.trim();
+  var site = document.getElementById("newSiteName").value.trim();
+
+  if(!login || !pass || !site){
+    alert("Please enter Login ID, Password, and Site / Project Name.");
+    return;
+  }
+  if(login === "admin"){
+    alert("Admin login ID cannot be used for site.");
+    return;
+  }
+  SITE_USERS[login] = { password: pass, siteName: site };
+  saveCustomSiteUsers();
+  document.getElementById("newSiteLogin").value = "";
+  document.getElementById("newSitePassword").value = "";
+  document.getElementById("newSiteName").value = "";
+  renderSiteUsers();
+  alert("Site added / updated successfully. New login is active now.");
+}
+
+function deleteSiteUser(login){
+  if(DEFAULT_SITE_USERS[login]){
+    alert("Default sites cannot be deleted from admin panel. You can hide/remove them only by editing HTML code.");
+    return;
+  }
+  if(confirm("Delete site login: " + login + " ?")){
+    delete SITE_USERS[login];
+    saveCustomSiteUsers();
+    renderSiteUsers();
+  }
+}
+
+function renderSiteUsers(){
+  var tbody = document.querySelector("#siteUserTable tbody");
+  if(!tbody) return;
+  tbody.innerHTML = "";
+  var keys = Object.keys(SITE_USERS).sort();
+  for(var i=0;i<keys.length;i++){
+    var login = keys[i];
+    var d = SITE_USERS[login];
+    var canDelete = DEFAULT_SITE_USERS[login] ? "Default" : '<button class="btn-danger" onclick="deleteSiteUser(\''+login.replace(/'/g,"\\'")+'\')">Delete</button>';
+    var tr = document.createElement("tr");
+    tr.innerHTML = '<td class="sr">'+(i+1)+'</td>'+
+      '<td>'+safe(login)+'</td>'+
+      '<td>'+safe(d.password)+'</td>'+
+      '<td>'+safe(d.siteName)+'</td>'+
+      '<td class="no-print">'+canDelete+'</td>';
+    tbody.appendChild(tr);
+  }
+}
+
+var CURRENT_USER = null;
+var MASTER_DATA_CACHE = [];
+var CURRENT_UPLOADED_FILES = [];
+
+document.getElementById("updateDate").valueAsDate = new Date();
+
+function login(){
+  var id = document.getElementById("loginId").value.trim().toLowerCase();
+  var pass = document.getElementById("passwordInput").value.trim();
+  document.getElementById("loginError").style.display = "none";
+
+  if(id === "admin" && pass === "admin123"){
+    CURRENT_USER = { role:"admin", loginId:"admin", siteName:"All Sites" };
+    openAdmin();
+    return;
+  }
+
+  if(SITE_USERS[id] && SITE_USERS[id].password === pass){
+    CURRENT_USER = { role:"site", loginId:id, siteName:SITE_USERS[id].siteName };
+    openEngineer();
+    return;
+  }
+
+  document.getElementById("loginError").style.display = "block";
+}
+
+function openEngineer(){
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("mainApp").style.display = "block";
+  document.getElementById("engineerPanel").classList.remove("hide");
+  document.getElementById("adminPanel").classList.add("hide");
+  document.getElementById("modeText").textContent = "Site Engineer Daily Entry - " + CURRENT_USER.siteName;
+  document.getElementById("projectName").value = CURRENT_USER.siteName;
+  document.getElementById("siteLoginDisplay").value = CURRENT_USER.loginId;
+  if(document.querySelectorAll("#activityTable tbody tr").length === 0) addActivityRow();
+  if(document.querySelectorAll("#dependencyTable tbody tr").length === 0) addDependencyRow();
+}
+
+function openAdmin(){
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("mainApp").style.display = "block";
+  document.getElementById("engineerPanel").classList.add("hide");
+  document.getElementById("adminPanel").classList.remove("hide");
+  document.getElementById("modeText").textContent = "Admin Master Dashboard - All Sites";
+  loadMasterData();
+  renderSiteUsers();
+}
+
+function logout(){ location.reload(); }
+
+function addActivityRow(){
+  var tbody = document.querySelector("#activityTable tbody");
+  var row = document.createElement("tr");
+  row.innerHTML = '<td class="sr"></td>'+
+    '<td><input placeholder="Wall panelling / Ceiling / Electrical"></td>'+
+    '<td><input placeholder="Area / Room"></td>'+
+    '<td><input type="number" class="planned" value="0" oninput="calculateAll()"></td>'+
+    '<td><input type="number" class="today" value="0" oninput="calculateAll()"></td>'+
+    '<td><input type="number" class="totalDone" value="0" oninput="calculateAll()"></td>'+
+    '<td><input type="number" class="balance" value="0" readonly></td>'+
+    '<td><input type="number" class="rowProgress" value="0" readonly></td>'+ 
+    '<td><select><option>Completed</option><option selected>In Progress</option><option>Pending</option><option>Hold</option></select></td>'+
+    '<td><input type="number" class="rowManpower" value="0"></td>'+
+    '<td><textarea></textarea></td>'+
+    '<td class="no-print"><button class="btn-danger" onclick="deleteRow(this)">Delete</button></td>';
+  tbody.appendChild(row);
+  updateSr();
+  calculateAll();
+}
+
+function addDependencyRow(){
+  var tbody = document.querySelector("#dependencyTable tbody");
+  var row = document.createElement("tr");
+  row.innerHTML = '<td class="sr"></td>'+
+    '<td><select><option>Material</option><option>Drawing</option><option>Client Front</option><option>Manpower</option><option>Other</option></select></td>'+
+    '<td><textarea></textarea></td>'+
+    '<td><input type="date"></td>'+
+    '<td><input></td>'+
+    '<td><select><option>Open</option><option>Under Follow-up</option><option>Closed</option></select></td>'+
+    '<td><textarea></textarea></td>'+
+    '<td class="no-print"><button class="btn-danger" onclick="deleteRow(this)">Delete</button></td>';
+  tbody.appendChild(row);
+  updateSr();
+}
+
+function deleteRow(btn){
+  btn.closest("tr").remove();
+  updateSr();
+  calculateAll();
+}
+
+function updateSr(){
+  var tables = document.querySelectorAll("tbody");
+  for(var t=0;t<tables.length;t++){
+    var rows = tables[t].querySelectorAll("tr");
+    for(var i=0;i<rows.length;i++){
+      var sr = rows[i].querySelector(".sr");
+      if(sr) sr.textContent = i + 1;
+    }
+  }
+}
+
+function calculateAll(){
+  var rows = document.querySelectorAll("#activityTable tbody tr");
+  var totalPlanned = 0;
+  var totalCompleted = 0;
+  for(var i=0;i<rows.length;i++){
+    var planned = Number(rows[i].querySelector(".planned").value) || 0;
+    var totalDone = Number(rows[i].querySelector(".totalDone").value) || 0;
+    var balance = Math.max(planned - totalDone, 0);
+    var progress = planned > 0 ? Math.round((totalDone / planned) * 100) : 0;
+    if(progress > 100) progress = 100;
+    rows[i].querySelector(".balance").value = balance;
+    rows[i].querySelector(".rowProgress").value = progress;
+    totalPlanned += planned;
+    totalCompleted += totalDone;
+  }
+  var overall = totalPlanned > 0 ? Math.round((totalCompleted / totalPlanned) * 100) : 0;
+  if(overall > 100) overall = 100;
+  document.getElementById("overallProgress").value = overall;
+  var total = (Number(document.getElementById("supervisor").value)||0) + (Number(document.getElementById("skilled").value)||0) + (Number(document.getElementById("helper").value)||0);
+  document.getElementById("totalManpower").value = total;
+}
+
+function handleFileUpload(event){
+  var files = Array.prototype.slice.call(event.target.files || []);
+  if(!files.length){ return; }
+  var maxSize = 2 * 1024 * 1024; // 2 MB per file for stable localStorage
+  var pending = files.length;
+  var accepted = [];
+  files.forEach(function(file){
+    if(file.size > maxSize){
+      alert(file.name + " is larger than 2 MB. Please compress photo or upload smaller file.");
+      pending--;
+      if(pending===0) renderUploadedFileList();
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function(e){
+      accepted.push({name:file.name,type:file.type,size:file.size,data:e.target.result});
+      pending--;
+      if(pending===0){
+        CURRENT_UPLOADED_FILES = CURRENT_UPLOADED_FILES.concat(accepted);
+        renderUploadedFileList();
+      }
+    };
+    reader.onerror = function(){
+      pending--;
+      if(pending===0) renderUploadedFileList();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderUploadedFileList(){
+  var box = document.getElementById("uploadedFileList");
+  if(!box) return;
+  if(!CURRENT_UPLOADED_FILES.length){ box.innerHTML = ""; return; }
+  var html = "<b>Selected Files:</b>";
+  CURRENT_UPLOADED_FILES.forEach(function(f,idx){
+    html += '<span class="file-item">'+safe(f.name)+' <button class="btn-danger" type="button" style="padding:3px 7px" onclick="removeUploadedFile('+idx+')">Remove</button></span>';
+    if((f.type||'').indexOf('image/')===0){ html += '<img class="preview-img" src="'+f.data+'">'; }
+  });
+  box.innerHTML = html;
+}
+
+function removeUploadedFile(index){
+  CURRENT_UPLOADED_FILES.splice(index,1);
+  renderUploadedFileList();
+}
+
+function uploadedFilesHtml(files){
+  files = files || [];
+  if(!files.length) return "";
+  return files.map(function(f,idx){
+    var label = safe(f.name || ("File " + (idx+1)));
+    if(f.data){ return '<span class="file-item"><a href="'+f.data+'" download="'+label+'" target="_blank">'+label+'</a></span>'; }
+    return '<span class="file-item">'+label+'</span>';
+  }).join("");
+}
+
+function getEntryData(){
+  calculateAll();
+  var completedToday = 0;
+  var balanceTotal = 0;
+  var activities = [];
+  var rows = document.querySelectorAll("#activityTable tbody tr");
+  for(var i=0;i<rows.length;i++){
+    var f = rows[i].querySelectorAll("input,select,textarea");
+    completedToday += Number(f[3].value) || 0;
+    balanceTotal += Number(f[5].value) || 0;
+    activities.push({activity:f[0].value,area:f[1].value,planned:f[2].value,today:f[3].value,totalDone:f[4].value,balance:f[5].value,progress:f[6].value,status:f[7].value,manpower:f[8].value,remarks:f[9].value});
+  }
+  var dependencies = [];
+  var drows = document.querySelectorAll("#dependencyTable tbody tr");
+  for(var j=0;j<drows.length;j++){
+    var d = drows[j].querySelectorAll("input,select,textarea");
+    dependencies.push({type:d[0].value,description:d[1].value,requiredDate:d[2].value,responsible:d[3].value,status:d[4].value,impact:d[5].value});
+  }
+  return {
+    createdAt:new Date().toISOString(),
+    siteLoginId:CURRENT_USER.loginId,
+    projectName:CURRENT_USER.siteName,
+    clientName:document.getElementById("clientName").value,
+    updateDate:document.getElementById("updateDate").value,
+    engineerName:document.getElementById("engineerName").value,
+    contactNo:document.getElementById("contactNo").value,
+    overallStatus:document.getElementById("overallStatus").value,
+    overallProgress:Number(document.getElementById("overallProgress").value)||0,
+    totalManpower:Number(document.getElementById("totalManpower").value)||0,
+    supervisor:Number(document.getElementById("supervisor").value)||0,
+    skilled:Number(document.getElementById("skilled").value)||0,
+    helper:Number(document.getElementById("helper").value)||0,
+    completedToday:completedToday,
+    balanceTotal:balanceTotal,
+    uploadedFiles:CURRENT_UPLOADED_FILES.slice(),
+    engineerRemarks:document.getElementById("engineerRemarks").value,
+    activities:activities,
+    dependencies:dependencies
+  };
+}
+
+function submitProgress(){
+  var data = getEntryData();
+  if(!data.engineerName){ alert("Please enter Site Engineer name."); return; }
+  var old = JSON.parse(localStorage.getItem("offlineProgressUpdates") || "[]");
+  old.push(data);
+  localStorage.setItem("offlineProgressUpdates", JSON.stringify(old));
+  alert("Daily progress submitted successfully.");
+  resetForm();
+}
+
+function resetForm(){
+  document.getElementById("clientName").value = "";
+  document.getElementById("engineerName").value = "";
+  document.getElementById("contactNo").value = "";
+  document.getElementById("overallProgress").value = 0;
+  CURRENT_UPLOADED_FILES = [];
+  if(document.getElementById("photoFiles")) document.getElementById("photoFiles").value = "";
+  renderUploadedFileList();
+  document.getElementById("engineerRemarks").value = "";
+  document.getElementById("supervisor").value = 0;
+  document.getElementById("skilled").value = 0;
+  document.getElementById("helper").value = 0;
+  document.getElementById("totalManpower").value = 0;
+  document.getElementById("updateDate").valueAsDate = new Date();
+  document.querySelector("#activityTable tbody").innerHTML = "";
+  document.querySelector("#dependencyTable tbody").innerHTML = "";
+  document.getElementById("projectName").value = CURRENT_USER.siteName;
+  document.getElementById("siteLoginDisplay").value = CURRENT_USER.loginId;
+  addActivityRow();
+  addDependencyRow();
+}
+
+function loadMasterData(){
+  var data = JSON.parse(localStorage.getItem("offlineProgressUpdates") || "[]");
+  data.reverse();
+  MASTER_DATA_CACHE = data;
+  renderMaster(data);
+}
+
+function progressBadge(value){
+  var v = Number(value) || 0;
+  var cls = 'critical';
+  if(v >= 80) cls = 'on';
+  else if(v >= 50) cls = 'minor';
+  return '<span class="badge '+cls+'">'+v+'%</span>';
+}
+
+function badge(status){
+  var cls = "on";
+  if(status === "Minor Delay") cls = "minor";
+  if(status === "Critical Delay") cls = "critical";
+  if(status === "Work Hold") cls = "hold";
+  return '<span class="badge '+cls+'">'+status+'</span>';
+}
+
+function renderMaster(data){
+  var tbody = document.querySelector("#masterTable tbody");
+  tbody.innerHTML = "";
+  var siteSummaryBody = document.querySelector("#siteSummaryTable tbody");
+  if(siteSummaryBody) siteSummaryBody.innerHTML = "";
+
+  var on=0,minor=0,critical=0,progress=0;
+  var siteMap = {};
+
+  for(var i=0;i<data.length;i++){
+    var d = data[i];
+
+    if(d.overallStatus === "On Track") on++;
+    if(d.overallStatus === "Minor Delay") minor++;
+    if(d.overallStatus === "Critical Delay" || d.overallStatus === "Work Hold") critical++;
+    progress += Number(d.overallProgress)||0;
+
+    var openDeps = (d.dependencies || []).filter(function(x){ return x.status !== "Closed"; });
+    var depText = (d.dependencies || []).map(function(x){
+      return (x.type || "") + ": " + (x.description || "") + " | Status: " + (x.status || "") + " | Responsible: " + (x.responsible || "") + " | Impact: " + (x.impact || "");
+    }).join(" ; ");
+
+    var tr = document.createElement("tr");
+    tr.innerHTML = '<td>'+new Date(d.createdAt).toLocaleString()+'</td>'+
+      '<td>'+safe(d.siteLoginId)+'</td>'+
+      '<td>'+safe(d.projectName)+'</td>'+
+      '<td>'+safe(d.clientName)+'</td>'+
+      '<td>'+safe(d.engineerName)+'</td>'+
+      '<td>'+safe(d.contactNo)+'</td>'+
+      '<td>'+badge(d.overallStatus)+'</td>'+
+      '<td>'+progressBadge(d.overallProgress)+'</td>'+
+      '<td>'+safe(d.totalManpower)+'</td>'+
+      '<td>'+safe(d.completedToday)+'</td>'+
+      '<td>'+safe(d.balanceTotal)+'</td>'+
+      '<td>'+safe(d.engineerRemarks)+'</td>'+
+      '<td>'+safe(d.photoLinks || depText)+'</td>';
+    tbody.appendChild(tr);
+
+    var siteName = d.projectName || d.siteLoginId || "Unknown Site";
+    if(!siteMap[siteName]){
+      siteMap[siteName] = {
+        siteName: siteName,
+        totalUpdates: 0,
+        progressSum: 0,
+        latest: null,
+        totalManpower: 0,
+        openDependencies: 0
+      };
+    }
+    siteMap[siteName].totalUpdates++;
+    siteMap[siteName].progressSum += Number(d.overallProgress) || 0;
+    siteMap[siteName].totalManpower += Number(d.totalManpower) || 0;
+    siteMap[siteName].openDependencies += openDeps.length;
+
+    if(!siteMap[siteName].latest || new Date(d.createdAt) > new Date(siteMap[siteName].latest.createdAt)){
+      siteMap[siteName].latest = d;
+    }
+  }
+
+  document.getElementById("totalSites").textContent = data.length;
+  document.getElementById("onTrackSites").textContent = on;
+  document.getElementById("minorDelaySites").textContent = minor;
+  document.getElementById("criticalSites").textContent = critical;
+  document.getElementById("avgProgress").textContent = data.length ? Math.round(progress/data.length) + "%" : "0%";
+
+  if(siteSummaryBody){
+    var sites = Object.keys(siteMap).sort();
+    for(var s=0;s<sites.length;s++){
+      var item = siteMap[sites[s]];
+      var latest = item.latest || {};
+      var avg = item.totalUpdates ? Math.round(item.progressSum / item.totalUpdates) : 0;
+      var row = document.createElement("tr");
+      row.innerHTML =
+        '<td><b>'+safe(item.siteName)+'</b></td>'+
+        '<td>'+safe(item.totalUpdates)+'</td>'+
+        '<td>'+safe(latest.createdAt ? new Date(latest.createdAt).toLocaleString() : "")+'</td>'+
+        '<td>'+badge(latest.overallStatus || "")+'</td>'+
+        '<td>'+progressBadge(latest.overallProgress || 0)+'</td>'+
+        '<td>'+avg+'%</td>'+
+        '<td>'+safe(item.totalManpower)+'</td>'+
+        '<td>'+safe(item.openDependencies)+'</td>'+
+        '<td>'+safe(latest.engineerName || "")+'</td>';
+      siteSummaryBody.appendChild(row);
+    }
+    if(sites.length === 0){
+      siteSummaryBody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#6b7280">No site update found.</td></tr>';
+    }
+  }
+}
+
+function safe(v){
+  if(v === undefined || v === null) return "";
+  return String(v).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});
+}
+
+function exportMasterCSV(){
+  var csv = "DateTime,Site Login,Site,Client,Engineer,Contact,Status,Progress,Total Manpower,Supervisor,Skilled,Helper,Completed Today,Balance,Total Dependencies,Open Dependencies,Dependency Details,Activity Details,Remarks,Uploaded Files\n";
+  for(var i=0;i<MASTER_DATA_CACHE.length;i++){
+    var d = MASTER_DATA_CACHE[i];
+    var deps = d.dependencies || [];
+    var openDeps = deps.filter(function(x){ return (x.status || "") !== "Closed"; });
+    var depText = deps.map(function(x,idx){
+      return (idx+1) + ". " + (x.type || "") + ": " + (x.description || "") + " | Required: " + (x.requiredDate || "") + " | Responsible: " + (x.responsible || "") + " | Status: " + (x.status || "") + " | Impact: " + (x.impact || "");
+    }).join(" || ");
+    var actText = (d.activities || []).map(function(x){
+      return (x.activity || "") + " - " + (x.area || "") + " | Planned: " + (x.planned || "0") + " | Today: " + (x.today || "0") + " | Total: " + (x.totalDone || "0") + " | Balance: " + (x.balance || "0") + " | Progress: " + (x.progress || "0") + "% | Status: " + (x.status || "") + " | MP: " + (x.manpower || "0") + " | Remarks: " + (x.remarks || "");
+    }).join(" || ");
+    var fileNames = (d.uploadedFiles || []).map(function(f){ return f.name || ''; }).join(' | ');
+    csv += '"'+new Date(d.createdAt).toLocaleString()+'","'+(d.siteLoginId||'')+'","'+(d.projectName||'')+'","'+(d.clientName||'')+'","'+(d.engineerName||'')+'","'+(d.contactNo||'')+'","'+(d.overallStatus||'')+'","'+(d.overallProgress||0)+'","'+(d.totalManpower||0)+'","'+(d.supervisor||0)+'","'+(d.skilled||0)+'","'+(d.helper||0)+'","'+(d.completedToday||0)+'","'+(d.balanceTotal||0)+'","'+deps.length+'","'+openDeps.length+'","'+depText.replace(/"/g,'""')+'","'+actText.replace(/"/g,'""')+'","'+(d.engineerRemarks||'').replace(/"/g,'""')+'","'+fileNames.replace(/"/g,'""')+'"\n';
+  }
+  var blob = new Blob([csv], {type:"text/csv"});
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "ONEPWS_Master_Site_Progress_With_Dependencies.csv";
+  a.click();
+}
+
+function clearOfflineData(){
+  if(confirm("Are you sure you want to clear all offline data from this browser?")){
+    localStorage.removeItem("offlineProgressUpdates");
+    loadMasterData();
+  }
+}
+
+function openTeamTrackerFullScreen(){
+  var frame = document.getElementById("teamTrackerFrame");
+  if(!frame) return;
+  var w = window.open("", "_blank");
+  w.document.open();
+  w.document.write(frame.getAttribute("srcdoc"));
+  w.document.close();
+}
+
+
+
+
+function showAdminSlide(slideId, btn){
+  var slides = document.querySelectorAll(".admin-slide");
+  for(var i=0;i<slides.length;i++){ slides[i].classList.remove("active"); }
+  var target = document.getElementById(slideId);
+  if(target) target.classList.add("active");
+
+  var buttons = document.querySelectorAll(".admin-tab-btn");
+  for(var j=0;j<buttons.length;j++){ buttons[j].classList.remove("active"); }
+  if(btn) btn.classList.add("active");
+
+  if(slideId === "slideDashboard"){ loadMasterData(); }
+  if(slideId === "slideSiteManagement"){ renderSiteUsers(); }
+  if(slideId === "slideCompliance"){ initComplianceMonth(); renderComplianceTable(); }
+}
+
+
+function openDWRFullScreen(){
+  var frame = document.getElementById("dwrFrame");
+  if(!frame) return;
+  var w = window.open("", "_blank");
+  w.document.open();
+  w.document.write(frame.getAttribute("srcdoc"));
+  w.document.close();
+}
+
+
+function exportSiteSummaryCSV(){
+  var data = JSON.parse(localStorage.getItem("offlineProgressUpdates") || "[]");
+  var siteMap = {};
+  for(var i=0;i<data.length;i++){
+    var d = data[i];
+    var siteName = d.projectName || d.siteLoginId || "Unknown Site";
+    var openDeps = (d.dependencies || []).filter(function(x){ return x.status !== "Closed"; }).length;
+    if(!siteMap[siteName]){
+      siteMap[siteName] = {siteName:siteName,totalUpdates:0,progressSum:0,totalManpower:0,openDependencies:0,latest:null};
+    }
+    siteMap[siteName].totalUpdates++;
+    siteMap[siteName].progressSum += Number(d.overallProgress)||0;
+    siteMap[siteName].totalManpower += Number(d.totalManpower)||0;
+    siteMap[siteName].openDependencies += openDeps;
+    if(!siteMap[siteName].latest || new Date(d.createdAt) > new Date(siteMap[siteName].latest.createdAt)){
+      siteMap[siteName].latest = d;
+    }
+  }
+  var csv = "Site Name,Total Updates,Latest Date,Latest Status,Latest Progress %,Avg Progress %,Total Manpower,Open Dependencies,Engineer\n";
+  Object.keys(siteMap).sort().forEach(function(k){
+    var x = siteMap[k];
+    var l = x.latest || {};
+    var avg = x.totalUpdates ? Math.round(x.progressSum/x.totalUpdates) : 0;
+    csv += '"' + (x.siteName||"") + '","' + x.totalUpdates + '","' + (l.createdAt ? new Date(l.createdAt).toLocaleString() : "") + '","' + (l.overallStatus||"") + '","' + (l.overallProgress||0) + '","' + avg + '","' + x.totalManpower + '","' + x.openDependencies + '","' + (l.engineerName||"") + '"\n';
+  });
+  var blob = new Blob([csv], {type:"text/csv"});
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "ONEPWS_Site_Wise_Summary.csv";
+  a.click();
+}
+
+
+var complianceEditIndex = -1;
+
+function getComplianceData(){
+  try { return JSON.parse(localStorage.getItem("labourMonthlyComplianceStatus") || "[]"); }
+  catch(e){ return []; }
+}
+
+function setComplianceData(data){
+  localStorage.setItem("labourMonthlyComplianceStatus", JSON.stringify(data));
+}
+
+function initComplianceMonth(){
+  var el = document.getElementById("compMonth");
+  if(el && !el.value){ el.value = new Date().toISOString().slice(0,7); }
+}
+
+function clearComplianceForm(){
+  complianceEditIndex = -1;
+  initComplianceMonth();
+  document.getElementById("compSite").value = "";
+  document.getElementById("compWages").value = "Pending";
+  document.getElementById("compPF").value = "Pending";
+  document.getElementById("compESI").value = "Pending";
+  document.getElementById("compRemark").value = "";
+}
+
+function saveComplianceStatus(){
+  initComplianceMonth();
+  var month = document.getElementById("compMonth").value;
+  var site = document.getElementById("compSite").value.trim();
+  var wages = document.getElementById("compWages").value;
+  var pf = document.getElementById("compPF").value;
+  var esi = document.getElementById("compESI").value;
+  var remark = document.getElementById("compRemark").value.trim();
+
+  if(!month || !site){
+    alert("Please enter Month and Site Name.");
+    return;
+  }
+
+  var data = getComplianceData();
+  var record = { month:month, site:site, wages:wages, pf:pf, esi:esi, remark:remark, updatedAt:new Date().toISOString() };
+
+  if(complianceEditIndex >= 0){
+    data[complianceEditIndex] = record;
+  } else {
+    var existing = data.findIndex(function(x){ return x.month === month && x.site.toLowerCase() === site.toLowerCase(); });
+    if(existing >= 0) data[existing] = record;
+    else data.push(record);
+  }
+
+  setComplianceData(data);
+  clearComplianceForm();
+  renderComplianceTable();
+  alert("Compliance status saved successfully.");
+}
+
+function complianceBadge(v){
+  if(v === "Done") return '<span class="compliance-status-done">Done</span>';
+  return '<span class="compliance-status-pending">Pending</span>';
+}
+
+function renderComplianceTable(){
+  initComplianceMonth();
+  var data = getComplianceData();
+  var fMonth = document.getElementById("compFilterMonth") ? document.getElementById("compFilterMonth").value : "";
+  var search = document.getElementById("compSearch") ? document.getElementById("compSearch").value.toLowerCase().trim() : "";
+
+  var filtered = data.filter(function(x){
+    var monthOk = !fMonth || x.month === fMonth;
+    var blob = ((x.site||"") + " " + (x.remark||"")).toLowerCase();
+    var searchOk = !search || blob.indexOf(search) >= 0;
+    return monthOk && searchOk;
+  }).sort(function(a,b){
+    return (b.month||"").localeCompare(a.month||"") || (a.site||"").localeCompare(b.site||"");
+  });
+
+  var tbody = document.querySelector("#complianceTable tbody");
+  if(!tbody) return;
+  tbody.innerHTML = "";
+
+  var wagesPending=0, pfPending=0, esiPending=0, allDone=0;
+  for(var i=0;i<data.length;i++){
+    if(data[i].wages !== "Done") wagesPending++;
+    if(data[i].pf !== "Done") pfPending++;
+    if(data[i].esi !== "Done") esiPending++;
+    if(data[i].wages === "Done" && data[i].pf === "Done" && data[i].esi === "Done") allDone++;
+  }
+
+  document.getElementById("compTotal").textContent = data.length;
+  document.getElementById("compWagesPending").textContent = wagesPending;
+  document.getElementById("compPFPending").textContent = pfPending;
+  document.getElementById("compESIPending").textContent = esiPending;
+  document.getElementById("compAllDone").textContent = allDone;
+
+  for(var j=0;j<filtered.length;j++){
+    var r = filtered[j];
+    var originalIndex = data.indexOf(r);
+    var tr = document.createElement("tr");
+    tr.innerHTML =
+      '<td class="sr">'+(j+1)+'</td>'+
+      '<td>'+safe(r.month)+'</td>'+
+      '<td><b>'+safe(r.site)+'</b></td>'+
+      '<td>'+complianceBadge(r.wages)+'</td>'+
+      '<td>'+complianceBadge(r.pf)+'</td>'+
+      '<td>'+complianceBadge(r.esi)+'</td>'+
+      '<td>'+safe(r.remark)+'</td>'+
+      '<td class="no-print"><button class="btn-light" onclick="editCompliance('+originalIndex+')">Edit</button> <button class="btn-danger" onclick="deleteCompliance('+originalIndex+')">Delete</button></td>';
+    tbody.appendChild(tr);
+  }
+
+  if(filtered.length === 0){
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#6b7280">No compliance record found.</td></tr>';
+  }
+}
+
+function editCompliance(index){
+  var data = getComplianceData();
+  var r = data[index];
+  if(!r) return;
+  complianceEditIndex = index;
+  document.getElementById("compMonth").value = r.month || "";
+  document.getElementById("compSite").value = r.site || "";
+  document.getElementById("compWages").value = r.wages || "Pending";
+  document.getElementById("compPF").value = r.pf || "Pending";
+  document.getElementById("compESI").value = r.esi || "Pending";
+  document.getElementById("compRemark").value = r.remark || "";
+}
+
+function deleteCompliance(index){
+  if(!confirm("Delete this compliance record?")) return;
+  var data = getComplianceData();
+  data.splice(index,1);
+  setComplianceData(data);
+  renderComplianceTable();
+}
+
+function exportComplianceCSV(){
+  var data = getComplianceData();
+  var csv = "Sr No,Month,Site Name,Wages Payment,PF,ESI,Remark\n";
+  for(var i=0;i<data.length;i++){
+    var r = data[i];
+    csv += '"' + (i+1) + '","' + (r.month||"") + '","' + (r.site||"") + '","' + (r.wages||"") + '","' + (r.pf||"") + '","' + (r.esi||"") + '","' + (r.remark||"") + '"\n';
+  }
+  var blob = new Blob([csv], {type:"text/csv"});
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "Labour_Monthly_Compliance_Status.csv";
+  a.click();
+}
+
+
+function printCurrentSlide(){
+  var active = document.querySelector(".admin-slide.active");
+  if(!active){
+    window.print();
+    return;
+  }
+  var win = window.open("", "_blank");
+  win.document.write("<html><head><title>ONEPWS Site Management System</title><style>body{font-family:Arial;margin:20px;color:#111827}table{width:100%;border-collapse:collapse}th,td{border:1px solid #cfd8e3;padding:8px;font-size:12px}th{background:#1f4e79;color:#fff}.no-print,button,input,select,textarea{display:none!important}.card{border:1px solid #ddd;padding:12px;margin-bottom:12px;border-radius:10px}.box{display:inline-block;border:1px solid #ddd;padding:10px;margin:5px}</style></head><body>");
+  win.document.write("<h2>ONEPWS Site Management System</h2>");
+  win.document.write(active.innerHTML);
+  win.document.write("<script>window.onload=function(){window.print();}<\/script>");
+  win.document.write("</body></html>");
+  win.document.close();
+}
+
+function exportFullAdminBackup(){
+  var backup = {
+    exportedAt: new Date().toISOString(),
+    offlineProgressUpdates: JSON.parse(localStorage.getItem("offlineProgressUpdates") || "[]"),
+    offlineSiteUsers: JSON.parse(localStorage.getItem("offlineSiteUsers") || "{}"),
+    labourMonthlyComplianceStatus: JSON.parse(localStorage.getItem("labourMonthlyComplianceStatus") || "[]"),
+    dailyWorkEntries: JSON.parse(localStorage.getItem("dailyWorkEntries") || "[]"),
+    siteTracker_clean_engineers_v4: JSON.parse(localStorage.getItem("siteTracker_clean_engineers_v4") || "null"),
+    siteTracker_clean_attendance_v4: JSON.parse(localStorage.getItem("siteTracker_clean_attendance_v4") || "[]"),
+    siteTracker_clean_movements_v4: JSON.parse(localStorage.getItem("siteTracker_clean_movements_v4") || "[]"),
+    siteTracker_clean_sites_v4: JSON.parse(localStorage.getItem("siteTracker_clean_sites_v4") || "null"),
+    siteTracker_idle_alerts_v4: JSON.parse(localStorage.getItem("siteTracker_idle_alerts_v4") || "[]")
+  };
+  var blob = new Blob([JSON.stringify(backup, null, 2)], {type:"application/json"});
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "ONEPWS_Admin_System_Full_Backup.json";
+  a.click();
+}
+
+function restoreFullAdminBackup(event){
+  var file = event.target.files[0];
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      var backup = JSON.parse(e.target.result);
+      if(backup.offlineProgressUpdates) localStorage.setItem("offlineProgressUpdates", JSON.stringify(backup.offlineProgressUpdates));
+      if(backup.offlineSiteUsers) localStorage.setItem("offlineSiteUsers", JSON.stringify(backup.offlineSiteUsers));
+      if(backup.labourMonthlyComplianceStatus) localStorage.setItem("labourMonthlyComplianceStatus", JSON.stringify(backup.labourMonthlyComplianceStatus));
+      if(backup.dailyWorkEntries) localStorage.setItem("dailyWorkEntries", JSON.stringify(backup.dailyWorkEntries));
+      if(backup.siteTracker_clean_engineers_v4 !== undefined) localStorage.setItem("siteTracker_clean_engineers_v4", JSON.stringify(backup.siteTracker_clean_engineers_v4));
+      if(backup.siteTracker_clean_attendance_v4) localStorage.setItem("siteTracker_clean_attendance_v4", JSON.stringify(backup.siteTracker_clean_attendance_v4));
+      if(backup.siteTracker_clean_movements_v4) localStorage.setItem("siteTracker_clean_movements_v4", JSON.stringify(backup.siteTracker_clean_movements_v4));
+      if(backup.siteTracker_clean_sites_v4 !== undefined) localStorage.setItem("siteTracker_clean_sites_v4", JSON.stringify(backup.siteTracker_clean_sites_v4));
+      if(backup.siteTracker_idle_alerts_v4) localStorage.setItem("siteTracker_idle_alerts_v4", JSON.stringify(backup.siteTracker_idle_alerts_v4));
+      alert("Backup restored successfully. Page will reload now.");
+      location.reload();
+    }catch(err){
+      alert("Invalid backup file.");
+    }
+  };
+  reader.readAsText(file);
+}
+
+function generateComplianceAlertReport(){
+  var data = [];
+  try{ data = JSON.parse(localStorage.getItem("labourMonthlyComplianceStatus") || "[]"); }catch(e){}
+  var pending = data.filter(function(x){
+    return x.wages !== "Done" || x.pf !== "Done" || x.esi !== "Done";
+  }).sort(function(a,b){ return (b.month||"").localeCompare(a.month||"") || (a.site||"").localeCompare(b.site||""); });
+
+  var report = "LABOUR MONTHLY COMPLIANCE PENDING ALERT\\n";
+  report += "Generated On: " + new Date().toLocaleString() + "\\n";
+  report += "===========================================\\n\\n";
+
+  if(pending.length === 0){
+    report += "All compliance records are completed. No pending Wages / PF / ESI found.";
+  } else {
+    pending.forEach(function(x, i){
+      var pendingItems = [];
+      if(x.wages !== "Done") pendingItems.push("Wages Payment");
+      if(x.pf !== "Done") pendingItems.push("PF");
+      if(x.esi !== "Done") pendingItems.push("ESI");
+      report += (i+1) + ". Site: " + (x.site || "") + "\\n";
+      report += "   Month: " + (x.month || "") + "\\n";
+      report += "   Pending: " + pendingItems.join(", ") + "\\n";
+      report += "   Remark: " + (x.remark || "-") + "\\n\\n";
+    });
+  }
+
+  var box = document.getElementById("upgradeAlertBox");
+  if(box){
+    box.className = pending.length ? "upgrade-alert" : "upgrade-ok";
+    box.textContent = report;
+  }
+
+  var win = window.open("", "_blank");
+  win.document.write("<html><head><title>Compliance Pending Alert</title><style>body{font-family:Arial;margin:24px}pre{white-space:pre-wrap;border:1px solid #ddd;padding:15px;border-radius:10px}</style></head><body><h2>ONEPWS Site Management System</h2><pre>"+safe(report)+"</pre><button onclick='window.print()'>Print / Save PDF</button></body></html>");
+  win.document.close();
+}
+
+function printComplianceReport(){
+  renderComplianceTable();
+  var table = document.getElementById("complianceTable");
+  var summary = "";
+  summary += "Total Records: " + (document.getElementById("compTotal")?.textContent || "0") + "\\n";
+  summary += "Wages Pending: " + (document.getElementById("compWagesPending")?.textContent || "0") + "\\n";
+  summary += "PF Pending: " + (document.getElementById("compPFPending")?.textContent || "0") + "\\n";
+  summary += "ESI Pending: " + (document.getElementById("compESIPending")?.textContent || "0") + "\\n";
+  var win = window.open("", "_blank");
+  win.document.write("<html><head><title>Labour Monthly Compliance Report</title><style>body{font-family:Arial;margin:20px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:8px;font-size:12px}th{background:#1f4e79;color:white}.no-print{display:none!important}pre{background:#f8fafc;padding:12px;border:1px solid #ddd}</style></head><body>");
+  win.document.write("<h2>ONEPWS Site Management System</h2><pre>"+summary+"</pre>");
+  if(table) win.document.write(table.outerHTML);
+  win.document.write("<script>window.onload=function(){window.print();}<\/script></body></html>");
+  win.document.close();
+}
+
+</script>
+</body>
+</html>
